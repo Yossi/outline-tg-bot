@@ -1,9 +1,10 @@
 from telegram import ParseMode
-from telegram.ext import Updater
+from telegram.ext import Updater, PicklePersistence
 from telegram.utils.helpers import mention_html
 from telegram.ext import CommandHandler, MessageHandler
 from telegram.ext import Filters
 from urlextract import URLExtract
+from tldextract import extract
 import os, sys
 import html
 import logging
@@ -14,11 +15,12 @@ from secrets import TOKEN, LIST_OF_ADMINS
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=logging.INFO)
 
-updater = Updater(token=TOKEN, use_context=True)
+persistence = PicklePersistence(filename='bot.persist')
+updater = Updater(token=TOKEN, persistence=persistence, use_context=True)
 dispatcher = updater.dispatcher
 
 def error(update, context):
-    '''send tracebacks to the dev'''
+    '''Send tracebacks to the dev(s)'''
     devs = LIST_OF_ADMINS
     if not update:
         return
@@ -38,7 +40,7 @@ def error(update, context):
     raise
 
 def log(func):
-    '''decorator that logs who said what to the bot'''
+    '''Decorator that logs who said what to the bot'''
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         id = update.effective_user.id
@@ -49,8 +51,11 @@ def log(func):
 
 @log
 def restart(update, context):
+    '''This sometimes loses the recent chat_data changes
+       I think it's a bug in the library
+       Clean shutdown doesn't have this problem'''
     def stop_and_restart():
-        '''Gracefully stop the Updater and replace the current process with a new one'''
+        '''Gracefully stop the updater and replace the current process with a new one'''
         updater.stop()
         os.execl(sys.executable, sys.executable, *sys.argv)
 
@@ -60,21 +65,78 @@ def restart(update, context):
     update.message.reply_text("...and we're back")
     logging.info("...and we're back")
 
+@log
+def chat_data(update, context):
+    '''See and clear chat_data'''
+    text = str(context.chat_data)
+    if context.args and context.args[0] == 'clear' and len(context.args) > 1:
+        context.chat_data.pop(' '.join(context.args[1:]), None)
+    logging.info(f'bot said:\n{text}')
+    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML)
+
+
+def get_domain(url):
+    '''Get the domain.tld of url. Ignore any subdomains'''
+    extract_result = extract(url)
+    if extract_result.domain and extract_result.suffix:
+        return extract_result.domain + '.' + extract_result.suffix
+    return 'no domain'
 
 @log
 def incoming(update, context):
-    '''check incoming stream for urls and slap an outline.com/ on the front of them'''
+    '''Check incoming stream for urls and slap an outline.com/ on the front of some of them'''
     extractor = URLExtract()
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text)
-    #TODO: only act on certain sites
     for url in urls:
-        response = f'outline.com/{url}'
+        if get_domain(url) not in context.chat_data.get('active domains', set()):
+            continue
+        response = f'<a href="outline.com/{url}">outline.com/{url}</a>'
         logging.info(f'bot said:\n{response}')
         context.bot.send_message(chat_id=update.effective_message.chat_id, text=response, parse_mode=ParseMode.HTML)
+    if len(urls) == 1:
+        context.chat_data['last url'] = urls[0]
+
+@log
+def include(update, context):
+    '''Add domains to the set that gets acted on'''
+    active_set = context.chat_data.get('active domains', set())
+    try:
+        if not context.args:
+            domain = get_domain(context.chat_data.get('last url'))
+        else:
+            domain = get_domain(context.args[0])
+    except TypeError:
+        domain = 'no domain'
+    if domain != 'no domain':
+        active_set.add(domain)
+        context.chat_data['active domains'] = active_set
+    logging.info(f'bot said:\n{domain}')
+    context.bot.send_message(chat_id=update.effective_message.chat_id, text=domain, parse_mode=ParseMode.HTML)
+
+@log
+def remove(update, context):
+    '''See and remove domains in/from active_set if needed'''
+    active_set = context.chat_data.get('active domains', set())
+    if not context.args and active_set:
+        text = '</code>\n<code>'.join(active_set)
+        text = f"<code>{text}</code>"
+    else:
+        try:
+            active_set.remove(' '.join(context.args))
+            text = f"Removed {' '.join(context.args)}"
+        except KeyError:
+            text = f"Failed to remove {' '.join(context.args)}\n Check your spelling?"
+    logging.info(f'bot said:\n{text}')
+    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML)
+
 
 dispatcher.add_handler(MessageHandler(Filters.text, incoming))
+dispatcher.add_handler(CommandHandler('include', include))
+dispatcher.add_handler(CommandHandler('remove', remove))
+dispatcher.add_handler(CommandHandler('list', remove)) # helper
 dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
+dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
 dispatcher.add_error_handler(error)
 
 logging.info('outline bot started')
