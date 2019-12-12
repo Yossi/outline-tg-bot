@@ -5,6 +5,7 @@ from telegram.ext import CommandHandler, MessageHandler
 from telegram.ext import Filters
 from urlextract import URLExtract
 from tldextract import extract
+from pyshorteners import Shortener, Shorteners
 import os, sys
 import html
 import logging
@@ -91,9 +92,12 @@ def incoming(update, context):
     for url in urls:
         if get_domain(url) not in context.chat_data.get('active domains', set()):
             continue
-        response = f'<a href="outline.com/{url}">outline.com/{url}</a>'
+        if not url.startswith('http'):
+            url = f'http://{url}'
+        short_url = Shortener(Shorteners.TINYURL).short(url)
+        response = f'outline.com/{short_url}'
         logging.info(f'bot said:\n{response}')
-        context.bot.send_message(chat_id=update.effective_message.chat_id, text=response, parse_mode=ParseMode.HTML)
+        context.bot.send_message(chat_id=update.effective_message.chat_id, text=response, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
     if len(urls) == 1:
         context.chat_data['last url'] = urls[0]
 
