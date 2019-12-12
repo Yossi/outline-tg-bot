@@ -73,7 +73,7 @@ def chat_data(update, context):
     if context.args and context.args[0] == 'clear' and len(context.args) > 1:
         context.chat_data.pop(' '.join(context.args[1:]), None)
     logging.info(f'bot said:\n{text}')
-    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML)
+    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
 def get_domain(url):
@@ -83,56 +83,66 @@ def get_domain(url):
         return extract_result.domain + '.' + extract_result.suffix
     return 'no domain'
 
+def add_outline(url, short=False):
+    if not url.startswith('http'):
+        url = f'http://{url}'
+    if short:
+        url = Shortener(Shorteners.TINYURL).short(url)
+    return f'outline.com/{url}'
+
+
 @log
 def incoming(update, context):
     '''Check incoming stream for urls and slap an outline.com/ on the front of some of them'''
     extractor = URLExtract()
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text)
+    active_dict = context.chat_data.get('active domains', {})
     for url in urls:
-        if get_domain(url) not in context.chat_data.get('active domains', set()):
+        if get_domain(url) not in active_dict:
             continue
-        if not url.startswith('http'):
-            url = f'http://{url}'
-        short_url = Shortener(Shorteners.TINYURL).short(url)
-        response = f'outline.com/{short_url}'
-        logging.info(f'bot said:\n{response}')
-        context.bot.send_message(chat_id=update.effective_message.chat_id, text=response, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        text = add_outline(url, active_dict[get_domain(url)])
+        logging.info(f'bot said:\n{text}')
+        context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
     if len(urls) == 1:
         context.chat_data['last url'] = urls[0]
 
 @log
 def include(update, context):
     '''Add domains to the set that gets acted on'''
-    active_set = context.chat_data.get('active domains', set())
+    active_dict = context.chat_data.get('active domains', {})
     try:
         if not context.args:
             domain = get_domain(context.chat_data.get('last url'))
+            text = add_outline(context.chat_data.get('last url'))
         else:
             domain = get_domain(context.args[0])
+            text = f'{context.args[0]} added'
     except TypeError:
-        domain = 'no domain'
+        domain = text = 'no domain'
     if domain != 'no domain':
-        active_set.add(domain)
-        context.chat_data['active domains'] = active_set
-    logging.info(f'bot said:\n{domain}')
-    context.bot.send_message(chat_id=update.effective_message.chat_id, text=domain, parse_mode=ParseMode.HTML)
+        active_dict[domain] = False
+        if len(context.args) == 2:
+            active_dict[domain] = bool(context.args[1])
+        context.chat_data['active domains'] = active_dict
+    logging.info(f'bot said:\n{text}')
+    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 @log
 def remove(update, context):
-    '''See and remove domains in/from active_set if needed'''
-    active_set = context.chat_data.get('active domains', set())
-    if not context.args and active_set:
-        text = '</code>\n<code>'.join(active_set)
+    '''See and remove domains in/from active_dict if needed'''
+    active_dict = context.chat_data.get('active domains', {})
+    if not context.args and active_dict:
+        text = '</code>\n<code>'.join((f'{url} {short}' for url, short in active_dict.items()))
         text = f"<code>{text}</code>"
     else:
         try:
-            active_set.remove(' '.join(context.args))
+            del active_dict[' '.join(context.args)]
             text = f"Removed {' '.join(context.args)}"
         except KeyError:
             text = f"Failed to remove {' '.join(context.args)}\n Check your spelling?"
     logging.info(f'bot said:\n{text}')
-    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML)
+    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
 dispatcher.add_handler(MessageHandler(Filters.text, incoming))
