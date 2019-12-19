@@ -72,9 +72,11 @@ def chat_data(update, context):
     text = str(context.chat_data)
     if context.args and context.args[0] == 'clear' and len(context.args) > 1:
         context.chat_data.pop(' '.join(context.args[1:]), None)
+    say(text, update, context)
+
+def say(text, update, context):
     logging.info(f'bot said:\n{text}')
     context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-
 
 def get_domain(url):
     '''Get the domain.tld of url. Ignore any subdomains'''
@@ -90,7 +92,6 @@ def add_outline(url, short=False):
         url = Shortener(Shorteners.TINYURL).short(url)
     return f'https://outline.com/{url}'
 
-
 @log
 def incoming(update, context):
     '''Check incoming stream for urls and slap an outline.com/ on the front of some of them'''
@@ -102,8 +103,7 @@ def incoming(update, context):
         if get_domain(url) not in active_dict:
             continue
         text = add_outline(url, active_dict[get_domain(url)])
-        logging.info(f'bot said:\n{text}')
-        context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        say(text, update, context)
     if len(urls) == 1:
         context.chat_data['last url'] = urls[0]
 
@@ -125,8 +125,7 @@ def include(update, context):
         if len(context.args) == 2:
             active_dict[domain] = bool(context.args[1])
         context.chat_data['active domains'] = active_dict
-    logging.info(f'bot said:\n{text}')
-    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    say(text, update, context)
 
 @log
 def remove(update, context):
@@ -141,8 +140,8 @@ def remove(update, context):
             text = f"Removed {' '.join(context.args)}"
         except KeyError:
             text = f"Failed to remove {' '.join(context.args)}\n Check your spelling?"
-    logging.info(f'bot said:\n{text}')
-    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    say(text, update, context)
+
 
 
 dispatcher.add_handler(MessageHandler(Filters.text, incoming))
