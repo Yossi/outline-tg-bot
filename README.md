@@ -6,7 +6,7 @@ Create a virtualenv or whatever you are using to keep this tidy.
 `virtualenv -p python3.6 venv`
 
 Install requirements with pip
-`pip3 install -r requirements.txt` (on just pip if you are in a venv)
+`pip3 install -r requirements.txt` (or just pip if you are in a venv)
 
 Talk to @botfather and get an api key.
 Open secrets.py.example and add the api key in the right place. Also add your tg user id to list of admins.
