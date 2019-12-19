@@ -88,7 +88,7 @@ def add_outline(url, short=False):
         url = f'http://{url}'
     if short:
         url = Shortener(Shorteners.TINYURL).short(url)
-    return f'outline.com/{url}'
+    return f'https://outline.com/{url}'
 
 
 @log
