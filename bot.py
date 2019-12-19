@@ -128,6 +128,14 @@ def include(update, context):
     say(text, update, context)
 
 @log
+def list_active_domains(update, context):
+    '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
+    active_dict = context.chat_data.get('active domains', {})
+    text = '</code>\n<code>'.join((f'{url} {short}' for url, short in active_dict.items()))
+    text = f"<code>{text}</code>"
+    say(text, update, context)
+
+@log
 def remove(update, context):
     '''See and remove domains in/from active_dict if needed'''
     active_dict = context.chat_data.get('active domains', {})
@@ -147,7 +155,7 @@ def remove(update, context):
 dispatcher.add_handler(MessageHandler(Filters.text, incoming))
 dispatcher.add_handler(CommandHandler('include', include))
 dispatcher.add_handler(CommandHandler('remove', remove))
-dispatcher.add_handler(CommandHandler('list', remove)) # helper
+dispatcher.add_handler(CommandHandler('list', list_active_domains))
 dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
 dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
 dispatcher.add_error_handler(error)
