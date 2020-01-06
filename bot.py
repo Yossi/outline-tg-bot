@@ -7,9 +7,11 @@ from urlextract import URLExtract
 from tldextract import extract
 from pyshorteners import Shortener, Shorteners
 import os, sys
+import csv
 import html
 import logging
 import traceback
+from io import StringIO, BytesIO
 from threading import Thread
 from functools import wraps
 from secrets import TOKEN, LIST_OF_ADMINS
@@ -151,12 +153,23 @@ def remove(update, context):
             text = f"Failed to remove {' '.join(context.args)}\n Check your spelling?"
     say(text, update, context)
 
+@log
+def export_urls(update, context):
+    chat_id = update.effective_message.chat_id
+    sio = StringIO() # csv insists on strs...
+    w = csv.writer(sio)
+    w.writerows(context.chat_data['active domains'].items())
+    sio.seek(0)
+    bio = BytesIO(sio.read().encode('utf8')) # ...but TG demands bytes
+    bio.name = f'{chat_id}.csv'
+    context.bot.send_document(chat_id=chat_id, document=bio)
 
 
 dispatcher.add_handler(MessageHandler(Filters.text, incoming))
 dispatcher.add_handler(CommandHandler('include', include))
 dispatcher.add_handler(CommandHandler('remove', remove))
 dispatcher.add_handler(CommandHandler('list', list_active_domains))
+dispatcher.add_handler(CommandHandler('export', export_urls))
 dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
 dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
 dispatcher.add_error_handler(error)
