@@ -16,7 +16,7 @@ from secrets import TOKEN, LIST_OF_ADMINS
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=logging.INFO)
 
-persistence = PicklePersistence(filename='bot.persist')
+persistence = PicklePersistence(filename='bot.persist', on_flush=False)
 updater = Updater(token=TOKEN, persistence=persistence, use_context=True)
 dispatcher = updater.dispatcher
 
@@ -57,6 +57,7 @@ def restart(update, context):
        Clean shutdown doesn't have this problem'''
     def stop_and_restart():
         '''Gracefully stop the updater and replace the current process with a new one'''
+        persistence.flush()
         updater.stop()
         os.execl(sys.executable, sys.executable, *sys.argv)
 
