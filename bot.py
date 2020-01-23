@@ -54,9 +54,6 @@ def log(func):
 
 @log
 def restart(update, context):
-    '''This sometimes loses the recent chat_data changes
-       I think it's a bug in the library
-       Clean shutdown doesn't have this problem'''
     def stop_and_restart():
         '''Gracefully stop the updater and replace the current process with a new one'''
         persistence.flush()
