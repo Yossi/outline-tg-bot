@@ -98,7 +98,7 @@ def incoming(update, context):
     '''Check incoming stream for urls and slap an outline.com/ on the front of some of them'''
     extractor = URLExtract()
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
-    urls = extractor.find_urls(update.effective_message.text)
+    urls = extractor.find_urls(update.effective_message.text, check_dns=True)
     active_dict = context.chat_data.get('active domains', {})
     for url in urls:
         if get_domain(url) not in active_dict:
