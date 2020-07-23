@@ -152,6 +152,7 @@ def remove(update, context):
 
 @log
 def export_urls(update, context):
+    '''Make settings avaliable as a CSV file'''
     chat_id = update.effective_message.chat_id
     sio = StringIO() # csv insists on strs...
     w = csv.writer(sio)
@@ -160,6 +161,11 @@ def export_urls(update, context):
     bio = BytesIO(sio.read().encode('utf8')) # ...but TG demands bytes
     bio.name = f'{chat_id}.csv'
     context.bot.send_document(chat_id=chat_id, document=bio)
+
+@log
+def import_urls(update, context):
+    '''Import settings previously exported with /export'''
+    #TODO: this
 
 
 dispatcher.add_handler(MessageHandler(Filters.text, incoming))
