@@ -9,6 +9,7 @@ from io import BytesIO, StringIO
 from secrets import LIST_OF_ADMINS, TOKEN
 from threading import Thread
 
+import requests
 from pyshorteners import Shortener
 from telegram import ParseMode
 from telegram.ext import (CommandHandler, Filters, MessageHandler,
@@ -86,16 +87,32 @@ def get_domain(url):
         return extract_result.domain + '.' + extract_result.suffix
     return 'no domain'
 
-def add_outline(url, short=False):
+def add_bypass(url, special=False):
+    '''Adds outline.com/ to the start of a url if special=False
+       If special=True, then check if archive.org has a copy and link to that if it does.
+       If it does not, then shorten the url with tinyurl.com and try it in outline.com again.'''
+
     if not url.startswith('http'):
         url = f'http://{url}'
-    if short:
-        url = Shortener(Shorteners.TINYURL).short(url)
-    return f'https://outline.com/{url}'
+
+    if not special:
+        return f'https://outline.com/{url}'
+    else:
+        on_archive = archive_org(url)
+        if on_archive:
+            return on_archive
+        return f'https://outline.com/{Shortener().tinyurl.short(url)}'
+
+def archive_org(url):
+    '''Returns the url of the latest snapshot if avalable on archive.org'''
+    r = requests.get(f'http://archive.org/wayback/available?url={url}')
+    return r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
+
+#TODO: http://archive.is/newest/{url}
 
 @log
 def incoming(update, context):
-    '''Check incoming stream for urls and slap an outline.com/ on the front of some of them'''
+    '''Check incoming stream for urls and slap an outline.com/ or archive.org/ on the front of some of them'''
     extractor = URLExtract()
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text, check_dns=True)
@@ -103,7 +120,7 @@ def incoming(update, context):
     for url in urls:
         if get_domain(url) not in active_dict:
             continue
-        text = add_outline(url, active_dict[get_domain(url)])
+        text = add_bypass(url, active_dict[get_domain(url)])
         say(text, update, context)
     if len(urls) == 1:
         context.chat_data['last url'] = urls[0]
@@ -115,7 +132,7 @@ def include(update, context):
     try:
         if not context.args:
             domain = get_domain(context.chat_data.get('last url'))
-            text = add_outline(context.chat_data.get('last url'))
+            text = add_bypass(context.chat_data.get('last url'))
         else:
             domain = get_domain(context.args[0])
             text = f'{context.args[0]} added'

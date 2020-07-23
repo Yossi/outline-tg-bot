@@ -1,4 +1,5 @@
-python-telegram-bot==12.2.0
-urlextract==0.14.0
+python-telegram-bot==12.8
+urlextract==1.0.0
 tldextract==2.2.2
-pyshorteners==0.6.1
+pyshorteners==1.0.1
+requests==2.24.0
