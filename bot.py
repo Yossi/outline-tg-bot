@@ -1,20 +1,21 @@
-from telegram import ParseMode
-from telegram.ext import Updater, PicklePersistence
-from telegram.utils.helpers import mention_html
-from telegram.ext import CommandHandler, MessageHandler
-from telegram.ext import Filters
-from urlextract import URLExtract
-from tldextract import extract
-from pyshorteners import Shortener, Shorteners
-import os, sys
 import csv
 import html
 import logging
+import os
+import sys
 import traceback
-from io import StringIO, BytesIO
-from threading import Thread
 from functools import wraps
-from secrets import TOKEN, LIST_OF_ADMINS
+from io import BytesIO, StringIO
+from secrets import LIST_OF_ADMINS, TOKEN
+from threading import Thread
+
+from pyshorteners import Shortener
+from telegram import ParseMode
+from telegram.ext import (CommandHandler, Filters, MessageHandler,
+                          PicklePersistence, Updater)
+from telegram.utils.helpers import mention_html
+from tldextract import extract
+from urlextract import URLExtract
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=logging.INFO)
 
@@ -168,13 +169,13 @@ def import_urls(update, context):
     #TODO: this
 
 
-dispatcher.add_handler(MessageHandler(Filters.text, incoming))
 dispatcher.add_handler(CommandHandler('include', include))
 dispatcher.add_handler(CommandHandler('remove', remove))
 dispatcher.add_handler(CommandHandler('list', list_active_domains))
 dispatcher.add_handler(CommandHandler('export', export_urls))
 dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
 dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
+dispatcher.add_handler(MessageHandler(Filters.text, incoming))
 dispatcher.add_error_handler(error)
 
 logging.info('outline bot started')
