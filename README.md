@@ -19,19 +19,19 @@ The bot will put out log messages at the info level as it sees things and when i
 
 Add the bot to a group chat and make it an admin so it can see all messages. Or talk to it in pm.
 
-Regular users can use the bot as follows:
-Post message as usual. The bot will silently detect and remember the last link it sees.
-If you know what the last link seen needs to get the outline.com treatment you say `/include`.
-From now on the bot will post an outline.com link for all urls from that domain.
-You can also add domains manually with `/include domain.tld`.
-`/list` will show all the domains the bot is set to act on.
-`/remove domain.tld` does just that.
-Note: some domains are blacklisted in outline.com (newyorktimes.com, wsj.com). Workaround that sometimes works is to use a url shortner.
-This will set the domain to get special treatment `/include domain.tld True`.
+Regular users can use the bot as follows:  
+Post message as usual. The bot will silently detect and remember the last link it sees.  
+If you know what the last link seen needs to get the outline.com treatment you say `/include`.  
+From now on the bot will post an outline.com link for all urls from that domain.  
+You can also add domains manually with `/include domain.tld`.  
+`/list` will show all the domains the bot is set to act on.  
+`/remove domain.tld` does just that.  
+Note: some domains are blacklisted in outline.com (newyorktimes.com, wsj.com). Workaround that sometimes works is to use a url shortner.  
+This will set the domain to get special treatment `/include domain.tld True`.  
 At the moment, the special treatment first checks if the URL is already in archive.org and tries to link to that. If it comes up empty, continue by shortening the URL and trying it on outline.com again.
 
-As a bot admin you have some commands that only you can run:
-`/r` - restart the bot. Handy for development.
-`/data` - Show all the stored data for the chat where you sent the command from.
-`/data clear <key>` - delete all the data in <key>.
+As a bot admin you have some commands that only you can run:  
+`/r` - restart the bot. Handy for development.  
+`/data` - Show all the stored data for the chat where you sent the command from.  
+`/data clear <key>` - delete all the data in <key>.  
 If the bot throws an exception it will send it to you in a pm.
