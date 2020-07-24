@@ -98,16 +98,26 @@ def add_bypass(url, special=False):
     if not special:
         return f'https://outline.com/{url}'
     else:
-        text = f'https://outline.com/{Shortener().tinyurl.short(url)}' + '\n\n' + archive(url)
-        return text
+        text = []
+        try:
+            text.append(f'https://outline.com/{Shortener().tinyurl.short(url)}')
+        except requests.exceptions.Timeout:
+            pass
+
+        text.append(archive(url))
+
+        return '\n\n'.join(text)
 
 def archive(url):
     '''Returns the url of the latest snapshot if avalable on varius archive sites'''
     urls = []
-    r = requests.get(f'http://archive.org/wayback/available?url={url}')
-    archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
-    if archive_org_url:
-        urls.append(archive_org_url)
+    try:
+        r = requests.get(f'http://archive.org/wayback/available?url={url}')
+        archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
+        if archive_org_url:
+            urls.append(archive_org_url)
+    except requests.exceptions.Timeout:
+        pass
     urls.append(f'http://archive.is/newest/{url}')
     return '\n\n'.join(urls)
 
