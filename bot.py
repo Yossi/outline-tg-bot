@@ -98,17 +98,18 @@ def add_bypass(url, special=False):
     if not special:
         return f'https://outline.com/{url}'
     else:
-        on_archive = archive_org(url)
-        if on_archive:
-            return on_archive
-        return f'https://outline.com/{Shortener().tinyurl.short(url)}'
+        text = f'https://outline.com/{Shortener().tinyurl.short(url)}' + '\n\n' + archive(url)
+        return text
 
-def archive_org(url):
-    '''Returns the url of the latest snapshot if avalable on archive.org'''
+def archive(url):
+    '''Returns the url of the latest snapshot if avalable on varius archive sites'''
+    urls = []
     r = requests.get(f'http://archive.org/wayback/available?url={url}')
-    return r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
-
-#TODO: http://archive.is/newest/{url}
+    archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
+    if archive_org_url:
+        urls.append(archive_org_url)
+    urls.append(f'http://archive.is/newest/{url}')
+    return '\n\n'.join(urls)
 
 @log
 def incoming(update, context):
