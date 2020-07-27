@@ -112,7 +112,11 @@ def dot_trick(url):
     '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
     domain = get_domain(url)
     dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
-    return '<a href="' + Shortener().tinyurl.short(dotted_url) + '">Dot Trick</a>'
+    try:
+        short_url = Shortener().tinyurl.short(dotted_url)
+    except requests.exceptions.Timeout:
+        return ''
+    return '<a href="' + short_url + '">Dot Trick</a>'
 
 def archive(url):
     '''Returns the url of the latest snapshot if avalable on varius archive sites'''
@@ -129,7 +133,7 @@ def archive(url):
 
 @log
 def incoming(update, context):
-    '''Check incoming stream for urls and slap an outline.com/ or archive.org/ on the front of some of them'''
+    '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
     extractor = URLExtract()
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text, check_dns=True)
