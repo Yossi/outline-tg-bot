@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import traceback
+import urllib.parse
 from functools import wraps
 from io import BytesIO, StringIO
 from secrets import LIST_OF_ADMINS, TOKEN
@@ -105,8 +106,15 @@ def add_bypass(url, special=False):
             pass
 
         text.append(archive(url))
+    text.append(dot_trick(url))
 
         return '\n\n'.join(text)
+
+def dot_trick(url):
+    '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
+    domain = get_domain(url)
+    dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
+    return '<a href="' + Shortener().tinyurl.short(dotted_url) + '">Dot Trick</a>'
 
 def archive(url):
     '''Returns the url of the latest snapshot if avalable on varius archive sites'''
