@@ -203,15 +203,15 @@ def import_urls(update, context):
     #TODO: this
 
 
-    dispatcher.add_handler(CommandHandler('include', include))
-    dispatcher.add_handler(CommandHandler('remove', remove))
-    dispatcher.add_handler(CommandHandler('list', list_active_domains))
-    dispatcher.add_handler(CommandHandler('export', export_urls))
-    dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
-    dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
-    dispatcher.add_handler(MessageHandler(Filters.text, incoming))
-    dispatcher.add_error_handler(error)
+dispatcher.add_handler(CommandHandler('include', include))
+dispatcher.add_handler(CommandHandler('remove', remove))
+dispatcher.add_handler(CommandHandler('list', list_active_domains))
+dispatcher.add_handler(CommandHandler('export', export_urls))
+dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
+dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
+dispatcher.add_handler(MessageHandler(Filters.text, incoming))
+dispatcher.add_error_handler(error)
 
-    logging.info('outline bot started')
-    updater.start_polling()
-    updater.idle()
+logging.info('outline bot started')
+updater.start_polling()
+updater.idle()
