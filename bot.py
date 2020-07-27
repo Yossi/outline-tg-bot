@@ -88,23 +88,29 @@ def get_domain(url):
         return extract_result.domain + '.' + extract_result.suffix
     return 'no domain'
 
+def link(url, text):
+    return f'<a href="{url}">{text}</a>'
+
 def add_bypass(url, special=False):
-    '''Puts together links with various bypass strategies'''
+    '''Puts together links with various bypass strategies
+
+    special arg is depricated and will be removed eventually'''
 
     if not url.startswith('http'):
         url = f'http://{url}'
 
-    if not special:
-        text = ['<a href="' + f'https://outline.com/{url}' + '">Outline + URL</a>']
-    else:
-        text = []
+    text = []
     try:
-        text.append('<a href="' + f'https://outline.com/{Shortener().tinyurl.short(url)}'+ '">Outline + shortURL</a>')
+        text.append(link(f'https://outline.com/{Shortener().tinyurl.short(url)}', 'Outline'))
+    except requests.exceptions.Timeout:
+        pass
+
+    try:
+        text.append(dot_trick(url))
     except requests.exceptions.Timeout:
         pass
 
     text.append(archive(url))
-    text.append(dot_trick(url))
 
     return '\n\n'.join(text)
 
@@ -112,11 +118,8 @@ def dot_trick(url):
     '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
     domain = get_domain(url)
     dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
-    try:
-        short_url = Shortener().tinyurl.short(dotted_url)
-    except requests.exceptions.Timeout:
-        return ''
-    return '<a href="' + short_url + '">Dot Trick</a>'
+    shortened_url = Shortener().tinyurl.short(dotted_url)
+    return link(shortened_url, 'Dot Trick')
 
 def archive(url):
     '''Returns the url of the latest snapshot if avalable on varius archive sites'''
@@ -125,10 +128,10 @@ def archive(url):
         r = requests.get(f'http://archive.org/wayback/available?url={url}')
         archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
         if archive_org_url:
-            urls.append('<a href="' + archive_org_url+ '">Wayback Machine</a>')
+            urls.append(link(archive_org_url, 'Wayback Machine'))
     except requests.exceptions.Timeout:
         pass
-    urls.append('<a href="' + f'http://archive.is/newest/{url}' + '">archive.is</a>')
+    urls.append(link(f'http://archive.is/newest/{url}', 'archive.is'))
     return '\n\n'.join(urls)
 
 @log
