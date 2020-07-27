@@ -89,26 +89,24 @@ def get_domain(url):
     return 'no domain'
 
 def add_bypass(url, special=False):
-    '''Adds outline.com/ to the start of a url if special=False
-       If special=True, then check if archive.org has a copy and link to that if it does.
-       If it does not, then shorten the url with tinyurl.com and try it in outline.com again.'''
+    '''Puts together links with various bypass strategies'''
 
     if not url.startswith('http'):
         url = f'http://{url}'
 
     if not special:
-        return f'https://outline.com/{url}'
+        text = ['<a href="' + f'https://outline.com/{url}' + '">Outline + URL</a>']
     else:
         text = []
-        try:
-            text.append(f'https://outline.com/{Shortener().tinyurl.short(url)}')
-        except requests.exceptions.Timeout:
-            pass
+    try:
+        text.append('<a href="' + f'https://outline.com/{Shortener().tinyurl.short(url)}'+ '">Outline + shortURL</a>')
+    except requests.exceptions.Timeout:
+        pass
 
-        text.append(archive(url))
+    text.append(archive(url))
     text.append(dot_trick(url))
 
-        return '\n\n'.join(text)
+    return '\n\n'.join(text)
 
 def dot_trick(url):
     '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
@@ -123,10 +121,10 @@ def archive(url):
         r = requests.get(f'http://archive.org/wayback/available?url={url}')
         archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
         if archive_org_url:
-            urls.append(archive_org_url)
+            urls.append('<a href="' + archive_org_url+ '">Wayback Machine</a>')
     except requests.exceptions.Timeout:
         pass
-    urls.append(f'http://archive.is/newest/{url}')
+    urls.append('<a href="' + f'http://archive.is/newest/{url}' + '">archive.is</a>')
     return '\n\n'.join(urls)
 
 @log
@@ -205,15 +203,15 @@ def import_urls(update, context):
     #TODO: this
 
 
-dispatcher.add_handler(CommandHandler('include', include))
-dispatcher.add_handler(CommandHandler('remove', remove))
-dispatcher.add_handler(CommandHandler('list', list_active_domains))
-dispatcher.add_handler(CommandHandler('export', export_urls))
-dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
-dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
-dispatcher.add_handler(MessageHandler(Filters.text, incoming))
-dispatcher.add_error_handler(error)
+    dispatcher.add_handler(CommandHandler('include', include))
+    dispatcher.add_handler(CommandHandler('remove', remove))
+    dispatcher.add_handler(CommandHandler('list', list_active_domains))
+    dispatcher.add_handler(CommandHandler('export', export_urls))
+    dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
+    dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
+    dispatcher.add_handler(MessageHandler(Filters.text, incoming))
+    dispatcher.add_error_handler(error)
 
-logging.info('outline bot started')
-updater.start_polling()
-updater.idle()
+    logging.info('outline bot started')
+    updater.start_polling()
+    updater.idle()
