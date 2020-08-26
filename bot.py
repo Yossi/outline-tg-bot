@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 import traceback
-import urllib.parse
+from urllib.parse import urlsplit, urlunsplit
 from functools import wraps
 from io import BytesIO, StringIO
 from secrets import LIST_OF_ADMINS, TOKEN
@@ -107,12 +107,16 @@ def add_bypass(url, special=False):
     except requests.exceptions.Timeout:
         pass
 
+    amp_url = amp(url)
+    if amp_url:
+        text.append(amp_url)
+
+    text.append(archive(url))
+
     try:
         text.append(dot_trick(url))
     except requests.exceptions.Timeout:
         pass
-
-    text.append(archive(url))
 
     return '\n\n'.join(text)
 
@@ -135,6 +139,36 @@ def archive(url):
         pass
     urls.append(link(f'http://archive.is/newest/{url}', 'archive.is'))
     return '\n\n'.join(urls)
+
+def amp(url):
+    '''Returns the url wrapped up in AMP stuff'''
+    urls = []
+
+    url_parts = urlsplit(url)
+    url_parts = url_parts._replace(scheme='')
+
+    urls.append(urlunsplit(url_parts)[2:]) # domain as is
+
+    domain = get_domain(url)
+
+    url_parts = url_parts._replace(netloc=domain)
+    urls.append(urlunsplit(url_parts)[2:]) # naked domain
+
+    url_parts = url_parts._replace(netloc='amp.' + domain)
+    urls.append(urlunsplit(url_parts)[2:]) # amp subdomain
+
+    # There exist other ways for sites to serve up amp content. It's just a pain to figure them all out.
+
+    for url in urls:
+        amp_url = f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true'
+        # amp_url = f'https://www.google.com/amp/{url}'
+        try:
+            r = requests.get(amp_url)
+            if r.status_code == 200:
+                return link(amp_url, 'AMP')
+        except requests.exceptions.Timeout:
+            pass
+    return ''
 
 @log
 def incoming(update, context):
