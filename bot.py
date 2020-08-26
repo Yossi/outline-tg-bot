@@ -20,6 +20,8 @@ from tldextract import extract
 from urlextract import URLExtract
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=logging.INFO)
+logger = logging.getLogger("filelock")
+logger.setLevel(logging.ERROR) # filelock can stfu
 
 persistence = PicklePersistence(filename='bot.persist', on_flush=False)
 updater = Updater(token=TOKEN, persistence=persistence, use_context=True)
