@@ -23,12 +23,12 @@ Regular users can use the bot as follows:
 Post message as usual. The bot will silently detect and remember the last link it sees.  
 If you know what the last link seen needs to get the outline.com treatment you say `/include`.  
 From now on the bot will post an outline.com link for all urls from that domain.  
-You can also add domains manually with `/include domain.tld`.  
+You can also add domains manually with `/include domain.tld`  
 `/list` will show all the domains the bot is set to act on.  
 `/remove domain.tld` does just that.  
 
 As a bot admin you have some commands that only you can run:  
 `/r` - restart the bot. Handy for development.  
 `/data` - Show all the stored data for the chat where you sent the command from.  
-`/data clear <key>` - delete all the data in <key>.  
+`/data clear <key>` - delete all the data in `<key>`.  
 If the bot throws an exception it will send it to you in a pm.
