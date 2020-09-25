@@ -23,10 +23,6 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=log
 logger = logging.getLogger("filelock")
 logger.setLevel(logging.ERROR) # filelock can stfu
 
-persistence = PicklePersistence(filename='bot.persist', on_flush=False)
-updater = Updater(token=TOKEN, persistence=persistence, use_context=True)
-dispatcher = updater.dispatcher
-
 def error(update, context):
     '''Send tracebacks to the dev(s)'''
     devs = LIST_OF_ADMINS
@@ -246,15 +242,20 @@ def import_urls(update, context):
     #TODO: this
 
 
-dispatcher.add_handler(CommandHandler('include', include))
-dispatcher.add_handler(CommandHandler('remove', remove))
-dispatcher.add_handler(CommandHandler('list', list_active_domains))
-dispatcher.add_handler(CommandHandler('export', export_urls))
-dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
-dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
-dispatcher.add_handler(MessageHandler(Filters.text, incoming))
-dispatcher.add_error_handler(error)
+if __name__ == '__main__':
+    persistence = PicklePersistence(filename='bot.persist', on_flush=False)
+    updater = Updater(token=TOKEN, persistence=persistence, use_context=True)
+    dispatcher = updater.dispatcher
 
-logging.info('outline bot started')
-updater.start_polling()
-updater.idle()
+    dispatcher.add_handler(CommandHandler('include', include))
+    dispatcher.add_handler(CommandHandler('remove', remove))
+    dispatcher.add_handler(CommandHandler('list', list_active_domains))
+    dispatcher.add_handler(CommandHandler('export', export_urls))
+    dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
+    dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
+    dispatcher.add_handler(MessageHandler(Filters.text, incoming))
+    dispatcher.add_error_handler(error)
+
+    logging.info('outline bot started')
+    updater.start_polling()
+    updater.idle()
