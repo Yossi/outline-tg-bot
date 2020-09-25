@@ -95,7 +95,7 @@ def short(url):
 def add_bypass(url, special=False):
     '''Puts together links with various bypass strategies
 
-    special arg is depricated and will be removed eventually'''
+    'special' arg is depricated and will be removed eventually'''
 
     if not url.startswith('http'):
         url = f'http://{url}'
@@ -165,13 +165,13 @@ def amp(url):
             f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true&outputType=amp',
             # f'https://{url}&outputType=amp'
         ]
-        for template in amp_url_templates:
+        for amp_url in amp_url_templates:
             try:
-                r = requests.get(template)
+                r = requests.get(amp_url)
                 size = len(r.content)
                 if r.status_code == 200:
                     amp_candidates.append((size, link(short(amp_url), 'AMP')))
-            except (requests.exceptions.Timeout):
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 pass
     return sorted(amp_candidates)[-1][1]
 
