@@ -106,11 +106,15 @@ def add_bypass(url, special=False):
     except requests.exceptions.Timeout:
         pass
 
+    wayback_url = wayback(url)
+    if wayback_url:
+        text.append(wayback_url)
+
     amp_url = amp(url)
     if amp_url:
         text.append(amp_url)
 
-    text.append(archive(url))
+    text.append(archive_is(url))
 
     try:
         text.append(dot_trick(url))
@@ -126,18 +130,19 @@ def dot_trick(url):
     shortened_url = short(dotted_url)
     return link(shortened_url, 'Dot Trick')
 
-def archive(url):
-    '''Returns the url of the latest snapshot if avalable on varius archive sites'''
-    urls = []
+def wayback(url):
+    '''Returns the url of the latest snapshot if avalable on wayback machine'''
     try:
         r = requests.get(f'http://archive.org/wayback/available?url={url}')
         archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
         if archive_org_url:
-            urls.append(link(archive_org_url, 'Wayback Machine'))
+            return link(archive_org_url, 'Wayback Machine')
     except requests.exceptions.Timeout:
         pass
-    urls.append(link(f'http://archive.is/newest/{url}', 'archive.is'))
-    return '\n\n'.join(urls)
+
+def archive_is(url):
+    '''Blindly returns the url for this page at archive.is'''
+    return link(f'http://archive.is/newest/{url}', 'archive.is')
 
 def amp(url):
     '''Returns the url wrapped up in AMP stuff'''
