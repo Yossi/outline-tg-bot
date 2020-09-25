@@ -89,6 +89,9 @@ def get_domain(url):
 def link(url, text):
     return f'<a href="{url}">{text}</a>'
 
+def short(url):
+    return Shortener().tinyurl.short(url)
+
 def add_bypass(url, special=False):
     '''Puts together links with various bypass strategies
 
@@ -99,7 +102,7 @@ def add_bypass(url, special=False):
 
     text = []
     try:
-        text.append(link(f'https://outline.com/{Shortener().tinyurl.short(url)}', 'Outline'))
+        text.append(link(f'https://outline.com/{short(url)}', 'Outline'))
     except requests.exceptions.Timeout:
         pass
 
@@ -120,7 +123,7 @@ def dot_trick(url):
     '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
     domain = get_domain(url)
     dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
-    shortened_url = Shortener().tinyurl.short(dotted_url)
+    shortened_url = short(dotted_url)
     return link(shortened_url, 'Dot Trick')
 
 def archive(url):
@@ -167,7 +170,7 @@ def amp(url):
                 r = requests.get(template)
                 size = len(r.content)
                 if r.status_code == 200:
-                    amp_candidates.append((size, link(Shortener().tinyurl.short(template), 'AMP')))
+                    amp_candidates.append((size, link(short(amp_url), 'AMP')))
             except (requests.exceptions.Timeout):
                 pass
     return sorted(amp_candidates)[-1][1]
