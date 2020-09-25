@@ -138,6 +138,7 @@ def archive(url):
 
 def amp(url):
     '''Returns the url wrapped up in AMP stuff'''
+    amp_candidates = [(0, '')]
     urls = []
 
     url_parts = urlsplit(url)
@@ -156,15 +157,20 @@ def amp(url):
     # There exist other ways for sites to serve up amp content. It's just a pain to figure them all out.
 
     for url in urls:
-        amp_url = f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true'
-        # amp_url = f'https://www.google.com/amp/{url}'
-        try:
-            r = requests.get(amp_url)
-            if r.status_code == 200:
-                return link(amp_url, 'AMP')
-        except requests.exceptions.Timeout:
-            pass
-    return ''
+        amp_url_templates = [
+            # f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true',
+            f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true&outputType=amp',
+            # f'https://{url}&outputType=amp'
+        ]
+        for template in amp_url_templates:
+            try:
+                r = requests.get(template)
+                size = len(r.content)
+                if r.status_code == 200:
+                    amp_candidates.append((size, link(Shortener().tinyurl.short(template), 'AMP')))
+            except (requests.exceptions.Timeout):
+                pass
+    return sorted(amp_candidates)[-1][1]
 
 @log
 def incoming(update, context):
