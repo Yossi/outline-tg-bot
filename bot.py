@@ -120,13 +120,6 @@ def add_bypass(url, special=False):
 def outline(url):
     return f'https://outline.com/{short(url)}'
 
-def dot_trick(url):
-    '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
-    domain = get_domain(url)
-    dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
-    shortened_url = short(dotted_url)
-    return shortened_url
-
 def wayback(url):
     '''Returns the url of the latest snapshot if avalable on wayback machine'''
     try:
@@ -136,10 +129,6 @@ def wayback(url):
             return archive_org_url
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
-
-def archive_is(url):
-    '''Blindly returns the url for this page at archive.is'''
-    return f'http://archive.is/newest/{url}'
 
 def amp(url):
     '''Returns the url wrapped up in AMP stuff'''
@@ -176,6 +165,17 @@ def amp(url):
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 pass
     return sorted(amp_candidates)[-1][1]
+
+def archive_is(url):
+    '''Blindly returns the url for this page at archive.is'''
+    return f'http://archive.is/newest/{url}'
+
+def dot_trick(url):
+    '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
+    domain = get_domain(url)
+    dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
+    shortened_url = short(dotted_url)
+    return shortened_url
 
 @log
 def incoming(update, context):
