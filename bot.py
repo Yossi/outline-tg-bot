@@ -101,34 +101,31 @@ def add_bypass(url, special=False):
         url = f'http://{url}'
 
     text = []
-    try:
-        text.append(link(f'https://outline.com/{short(url)}', 'Outline'))
-    except requests.exceptions.Timeout:
-        pass
 
-    wayback_url = wayback(url)
-    if wayback_url:
-        text.append(wayback_url)
+    bypasses = (
+        (outline(url), 'Outline'),
+        (wayback(url), 'Wayback Machine'),
+        (amp(url), 'AMP'),
+        (archive_is(url), 'archive.is'),
+        (dot_trick(url), 'Dot Trick')
+    )
 
-    amp_url = amp(url)
-    if amp_url:
-        text.append(amp_url)
-
-    text.append(archive_is(url))
-
-    try:
-        text.append(dot_trick(url))
-    except requests.exceptions.Timeout:
-        pass
+    for bypass in bypasses:
+        if bypass[0]:
+            text.append(link(*bypass))
 
     return '\n\n'.join(text)
+
+
+def outline(url):
+    return f'https://outline.com/{short(url)}'
 
 def dot_trick(url):
     '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
     domain = get_domain(url)
     dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
     shortened_url = short(dotted_url)
-    return link(shortened_url, 'Dot Trick')
+    return shortened_url
 
 def wayback(url):
     '''Returns the url of the latest snapshot if avalable on wayback machine'''
@@ -136,13 +133,13 @@ def wayback(url):
         r = requests.get(f'http://archive.org/wayback/available?url={url}')
         archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
         if archive_org_url:
-            return link(archive_org_url, 'Wayback Machine')
-    except requests.exceptions.Timeout:
+            return archive_org_url
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
 def archive_is(url):
     '''Blindly returns the url for this page at archive.is'''
-    return link(f'http://archive.is/newest/{url}', 'archive.is')
+    return f'http://archive.is/newest/{url}'
 
 def amp(url):
     '''Returns the url wrapped up in AMP stuff'''
@@ -175,7 +172,7 @@ def amp(url):
                 r = requests.get(amp_url)
                 size = len(r.content)
                 if r.status_code == 200:
-                    amp_candidates.append((size, link(short(amp_url), 'AMP')))
+                    amp_candidates.append((size, short(amp_url)))
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 pass
     return sorted(amp_candidates)[-1][1]
