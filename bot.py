@@ -179,7 +179,10 @@ def dot_trick(url):
     return shortened_url
 
 def google_cache(url):
-    return f'http://webcache.googleusercontent.com/search?q=cache:{url}'
+    gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
+    r = requests.get(gcache_url)
+    if f'<base href="{url}' in r.text:
+        return gcache_url
 
 @log
 def incoming(update, context):
