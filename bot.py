@@ -106,9 +106,9 @@ def add_bypass(url, special=False):
         (outline(url), 'Outline'),
         (wayback(url), 'Wayback Machine'),
         (amp(url), 'AMP'),
+        (google_cache(url), 'Google Cache'),
         (archive_is(url), 'archive.is'),
         (dot_trick(url), 'Dot Trick'),
-        (google_cache(url), 'G Cache')
     )
 
     for bypass in bypasses:
@@ -167,6 +167,12 @@ def amp(url):
                 pass
     return sorted(amp_candidates)[-1][1]
 
+def google_cache(url):
+    gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
+    r = requests.get(gcache_url)
+    if f'<base href="{url}' in r.text:
+        return gcache_url
+
 def archive_is(url):
     '''Blindly returns the url for this page at archive.is'''
     return f'http://archive.is/newest/{url}'
@@ -177,12 +183,6 @@ def dot_trick(url):
     dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
     shortened_url = short(dotted_url)
     return shortened_url
-
-def google_cache(url):
-    gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
-    r = requests.get(gcache_url)
-    if f'<base href="{url}' in r.text:
-        return gcache_url
 
 @log
 def incoming(update, context):
