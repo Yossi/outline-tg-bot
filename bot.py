@@ -107,7 +107,8 @@ def add_bypass(url, special=False):
         (wayback(url), 'Wayback Machine'),
         (amp(url), 'AMP'),
         (archive_is(url), 'archive.is'),
-        (dot_trick(url), 'Dot Trick')
+        (dot_trick(url), 'Dot Trick'),
+        (google_cache(url), 'G Cache')
     )
 
     for bypass in bypasses:
@@ -176,6 +177,9 @@ def dot_trick(url):
     dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
     shortened_url = short(dotted_url)
     return shortened_url
+
+def google_cache(url):
+    return f'http://webcache.googleusercontent.com/search?q=cache:{url}'
 
 @log
 def incoming(update, context):
