@@ -174,8 +174,10 @@ def google_cache(url):
         return gcache_url
 
 def archive_is(url):
-    '''Blindly returns the url for this page at archive.is'''
-    return f'http://archive.is/newest/{url}'
+    '''Returns the url for this page at archive.is if it exists'''
+    r = requests.get(f'http://archive.is/timemap/{url}')
+    if r.status_code is 200:
+        return f'http://archive.is/newest/{url}'
 
 def dot_trick(url):
     '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
