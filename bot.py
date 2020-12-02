@@ -202,6 +202,19 @@ def incoming(update, context):
         context.chat_data['last url'] = urls[0]
 
 @log
+def translate(update, context):
+    text = []
+    url = context.chat_data.get('last url')
+    languages = ['en']
+    if context.args:
+        languages = context.args
+
+    for lang in languages:
+        text.append(link(f'https://translate.google.com/translate?tl={lang}&u={url}', f'Translation to {lang}'))
+
+    say('\n\n'.join(text), update, context)
+
+@log
 def include(update, context):
     '''Add domains to the set that gets acted on'''
     active_dict = context.chat_data.get('active domains', {})
@@ -267,6 +280,7 @@ if __name__ == '__main__':
     updater = Updater(token=TOKEN, persistence=persistence, use_context=True)
     dispatcher = updater.dispatcher
 
+    dispatcher.add_handler(CommandHandler('translate', translate))
     dispatcher.add_handler(CommandHandler('include', include))
     dispatcher.add_handler(CommandHandler('remove', remove))
     dispatcher.add_handler(CommandHandler('list', list_active_domains))
