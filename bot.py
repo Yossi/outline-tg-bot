@@ -92,7 +92,7 @@ def link(url, text):
 def short(url):
     return Shortener().tinyurl.short(url)
 
-def add_bypass(url, special=False):
+def add_bypass(url, context):
     '''Puts together links with various bypass strategies
 
     'special' arg is depricated and will be removed eventually'''
@@ -103,17 +103,23 @@ def add_bypass(url, special=False):
     text = []
 
     bypasses = (
-        (outline(url), 'Outline'),
-        (wayback(url), 'Wayback Machine'),
-        (amp(url), 'AMP'),
-        (google_cache(url), 'Google Cache'),
-        (archive_is(url), 'archive.is'),
-        (dot_trick(url), 'Dot Trick'),
+        (outline, 'Outline'),
+        (wayback, 'Wayback Machine'),
+        (amp, 'AMP'),
+        (google_cache, 'Google Cache'),
+        (archive_is, 'archive.is'),
+        (dot_trick, 'Dot Trick'),
     )
 
-    for bypass in bypasses:
-        if bypass[0]:
-            text.append(link(*bypass))
+    for bypass, bp_text in bypasses:
+        try:
+            bp_url = bypass(url)
+            if bp_url:
+                text.append(link(bp_url, bp_text))
+        except:
+            devs = LIST_OF_ADMINS
+            for dev_id in devs:
+                context.bot.send_message(dev_id, f'error when trying to apply {bp_text} bypass to {url}', parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
     return '\n\n'.join(text)
 
@@ -192,11 +198,11 @@ def incoming(update, context):
     extractor = URLExtract()
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text, check_dns=True)
-    active_dict = context.chat_data.get('active domains', {})
+    active_dict = context.chat_data.get('active domains', {}) # this could have been a set instead. stuck for legacy reasons
     for url in urls:
         if get_domain(url) not in active_dict:
             continue
-        text = add_bypass(url, active_dict[get_domain(url)])
+        text = add_bypass(url, context=context)
         say(text, update, context)
     if len(urls) == 1:
         context.chat_data['last url'] = urls[0]
@@ -221,7 +227,7 @@ def include(update, context):
     try:
         if not context.args:
             domain = get_domain(context.chat_data.get('last url'))
-            text = add_bypass(context.chat_data.get('last url'))
+            text = add_bypass(context.chat_data.get('last url'), context=context)
         else:
             domain = get_domain(context.args[0])
             text = f'{context.args[0]} added'
