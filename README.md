@@ -21,7 +21,7 @@ Add the bot to a group chat and make it an admin so it can see all messages. Or 
 
 Regular users can use the bot as follows:  
 Post message as usual. The bot will silently detect and remember the last link it sees.  
-When you know what the last link seen needs to get the outline.com (or whatever method works) treatment you say `/include`.  
+When you know that the last link seen needs to get the outline.com (or whatever method works) treatment you say `/include`.  
 Immediately and from now on the bot will attempt to post a list of bypass links for all urls from that domain.  
 You can also add domains manually with `/include domain.tld`.  
 `/list` will show all the domains the bot is set to act on.  
