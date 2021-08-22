@@ -12,7 +12,7 @@ Talk to @botfather and get an api key.
 Open secrets.py.example and add the api key in the right place. Also add your tg user id to list of admins.
 Save this edited file as secrets.py (no .example on the end).
 
-Run the bot.
+Run the bot.  
 `python bot.py`
 
 The bot will put out log messages at the info level as it sees things and when it talks. It does not attempt to save these logs anywhere.
@@ -21,11 +21,14 @@ Add the bot to a group chat and make it an admin so it can see all messages. Or 
 
 Regular users can use the bot as follows:  
 Post message as usual. The bot will silently detect and remember the last link it sees.  
-If you know what the last link seen needs to get the outline.com treatment you say `/include`.  
-From now on the bot will post an outline.com link for all urls from that domain.  
-You can also add domains manually with `/include domain.tld`  
+When you know what the last link seen needs to get the outline.com (or whatever method works) treatment you say `/include`.  
+Immediately and from now on the bot will attempt to post a list of bypass links for all urls from that domain.  
+You can also add domains manually with `/include domain.tld`.  
 `/list` will show all the domains the bot is set to act on.  
 `/remove domain.tld` does just that.  
+
+Additionally, users can request a google translate version of the most recent link by sending `/translate`.  
+`/translate` defaults to english but will also accept a list of ISO-639-1 language codes. For example `/translate en de es`.
 
 As a bot admin you have some commands that only you can run:  
 `/r` - restart the bot. Handy for development.  
