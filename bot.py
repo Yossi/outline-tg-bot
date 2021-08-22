@@ -126,7 +126,10 @@ def add_bypass(url, context):
 
 
 def outline(url):
-    return f'https://outline.com/{short(url)}'
+    '''Returns the url for this page at outline.com if it exists'''
+    r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}')
+    if r.status_code is 200:
+        return f'https://outline.com/{short(url)}'
 
 def wayback(url):
     '''Returns the url of the latest snapshot if avalable on wayback machine'''
