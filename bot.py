@@ -108,7 +108,7 @@ def add_bypass(url, context):
         (amp, 'AMP'),
         (google_cache, 'Google Cache'),
         (archive_is, 'archive.is'),
-        (dot_trick, 'Dot Trick'),
+        #(dot_trick, 'Dot Trick'),
     )
 
     for bypass, bp_text in bypasses:
