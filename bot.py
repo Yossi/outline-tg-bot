@@ -109,6 +109,7 @@ def add_bypass(url, context):
         (google_cache, 'Google Cache'),
         (archive_is, 'archive.is'),
         #(dot_trick, 'Dot Trick'),
+        (nitter, 'Twiiit'),
     )
 
     for bypass, bp_text in bypasses:
@@ -191,6 +192,14 @@ def dot_trick(url):
     dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
     shortened_url = short(dotted_url)
     return shortened_url
+
+def nitter(url):
+    '''Converts twitter links to a randomly chosen instance of nitter'''
+    domain = get_domain(url)
+    if domain == 'twitter.com':
+        url_parts = urlsplit(url)
+        url_parts = url_parts._replace(netloc='twiiit.com')
+        return urlunsplit(url_parts)
 
 @log
 def incoming(update, context):
