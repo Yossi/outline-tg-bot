@@ -32,7 +32,7 @@ def error(update, context):
     trace = "".join(traceback.format_tb(sys.exc_info()[2]))
     payload = ""
     if update.effective_user:
-        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'
+        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}' # if it blows up here it's possibly because you used python < 3.6
     if update.effective_chat:
         payload += f' within the chat <i>{html.escape(str(update.effective_chat.title))}</i>'
         if update.effective_chat.username:
@@ -95,7 +95,6 @@ def get_domain(url):
 def short(url):
     return Shortener().tinyurl.short(url)
 
-
 def add_bypass(url, context):
     '''Puts together links with various bypass strategies'''
 
@@ -123,6 +122,8 @@ def add_bypass(url, context):
             devs = LIST_OF_ADMINS
             for dev_id in devs:
                 context.bot.send_message(dev_id, f'error when trying to apply {bp_text} bypass to {url}', parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+                trace = "".join(traceback.format_tb(sys.exc_info()[2]))
+                logging.warning(trace)
 
     return '\n\n'.join(text)
 
