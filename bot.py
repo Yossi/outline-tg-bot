@@ -23,6 +23,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=log
 logger = logging.getLogger("filelock")
 logger.setLevel(logging.ERROR) # filelock can stfu
 
+# logging
 def error(update, context):
     '''Send tracebacks to the dev(s)'''
     devs = LIST_OF_ADMINS
@@ -53,6 +54,7 @@ def log(func):
         return func(update, context, *args, **kwargs)
     return wrapped
 
+# admin
 @log
 def restart(update, context):
     def stop_and_restart():
@@ -75,9 +77,13 @@ def chat_data(update, context):
         context.chat_data.pop(' '.join(context.args[1:]), None)
     say(text, update, context)
 
+# internal bot helper stuff
 def say(text, update, context):
     logging.info(f'bot said:\n{text}')
     context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+
+def link(url, text):
+    return f'<a href="{url}">{text}</a>'
 
 def get_domain(url):
     '''Get the domain.tld of url. Ignore any subdomains'''
@@ -86,16 +92,12 @@ def get_domain(url):
         return extract_result.domain + '.' + extract_result.suffix
     return 'no domain'
 
-def link(url, text):
-    return f'<a href="{url}">{text}</a>'
-
 def short(url):
     return Shortener().tinyurl.short(url)
 
-def add_bypass(url, context):
-    '''Puts together links with various bypass strategies
 
-    'special' arg is depricated and will be removed eventually'''
+def add_bypass(url, context):
+    '''Puts together links with various bypass strategies'''
 
     if not url.startswith('http'):
         url = f'http://{url}'
@@ -124,7 +126,7 @@ def add_bypass(url, context):
 
     return '\n\n'.join(text)
 
-
+# bypasses
 def outline(url):
     '''Returns the url for this page at outline.com if it exists'''
     r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}')
@@ -204,13 +206,14 @@ def nitter(url):
         url_parts = url_parts._replace(netloc='twiiit.com')
         return urlunsplit(url_parts)
 
+# main thing
 @log
 def incoming(update, context):
     '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
     extractor = URLExtract()
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text, check_dns=True)
-    active_dict = context.chat_data.get('active domains', {}) # this could have been a set instead. stuck for legacy reasons
+    active_dict = context.chat_data.get('active domains', {}) # this s/could have been a set instead. stuck as dict for legacy reasons
     for url in urls:
         if get_domain(url) not in active_dict:
             continue
@@ -219,19 +222,7 @@ def incoming(update, context):
     if len(urls) == 1:
         context.chat_data['last url'] = urls[0]
 
-@log
-def translate(update, context):
-    text = []
-    url = context.chat_data.get('last url')
-    languages = ['en']
-    if context.args:
-        languages = context.args
-
-    for lang in languages:
-        text.append(link(f'https://translate.google.com/translate?tl={lang}&u={url}', f'Translation to {lang}'))
-
-    say('\n\n'.join(text), update, context)
-
+# user accessible commands
 @log
 def include(update, context):
     '''Add domains to the set that gets acted on'''
@@ -253,14 +244,6 @@ def include(update, context):
     say(text, update, context)
 
 @log
-def list_active_domains(update, context):
-    '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
-    active_dict = context.chat_data.get('active domains', {})
-    text = '</code>\n<code>'.join((f'{url} {short}' for url, short in active_dict.items()))
-    text = f"<code>{text}</code>"
-    say(text, update, context)
-
-@log
 def remove(update, context):
     '''See and remove domains in/from active_dict if needed'''
     active_dict = context.chat_data.get('active domains', {})
@@ -275,6 +258,29 @@ def remove(update, context):
             text = f"Failed to remove {' '.join(context.args)}\n Check your spelling?"
     say(text, update, context)
 
+@log
+def list_active_domains(update, context):
+    '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
+    active_dict = context.chat_data.get('active domains', {})
+    text = '</code>\n<code>'.join((f'{url} {short}' for url, short in active_dict.items()))
+    text = f"<code>{text}</code>"
+    say(text, update, context)
+
+@log
+def translate(update, context):
+    '''Run the page at url through google translate'''
+    text = []
+    url = context.chat_data.get('last url')
+    languages = ['en']
+    if context.args:
+        languages = context.args
+
+    for lang in languages:
+        text.append(link(f'https://translate.google.com/translate?tl={lang}&u={url}', f'Translation to {lang}'))
+
+    say('\n\n'.join(text), update, context)
+
+# useless junk feature
 @log
 def export_urls(update, context):
     '''Make settings avaliable as a CSV file'''
