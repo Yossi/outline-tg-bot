@@ -111,6 +111,7 @@ def add_bypass(url, context):
         (google_cache, 'Google Cache'),
         (archive_is, 'archive.is'),
         (nitter, 'Twiiit'),
+        (lite_mode, 'Lite Mode')
     )
 
     for bypass, bp_text in bypasses:
@@ -197,6 +198,31 @@ def nitter(url):
         url_parts = urlsplit(url)
         url_parts = url_parts._replace(netloc='twiiit.com')
         return urlunsplit(url_parts)
+
+def lite_mode(url):
+    '''Converts certain news sites to their lite versions'''
+    domain = get_domain(url)
+    url_parts = urlsplit(url)
+
+    if domain == 'csmonitor.com':
+        lite_url = urlunsplit(url_parts._replace(path='/layout/set/text/' + url_parts.path))
+
+    elif domain == 'npr.org':
+        try:
+            lite_url = urlunsplit(url_parts._replace(netloc='text.npr.org', path=url_parts.path.split('/')[4])) # this [4] can conceivably wind up out of range
+        except:
+            lite_url = ''
+
+    # elif domain == 'cnn.com':
+    #     lite_url = 'http://lite.cnn.com/en/article/h_{unidentified_hash}'
+
+    else:
+        lite_url = ''
+
+    if lite_url:
+        r = requests.get(lite_url)
+        if r.status_code is 200:
+            return lite_url
 
 # main thing
 @log
