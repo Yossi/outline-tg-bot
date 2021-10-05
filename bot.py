@@ -110,7 +110,6 @@ def add_bypass(url, context):
         (amp, 'AMP'),
         (google_cache, 'Google Cache'),
         (archive_is, 'archive.is'),
-        #(dot_trick, 'Dot Trick'),
         (nitter, 'Twiiit'),
     )
 
@@ -190,13 +189,6 @@ def archive_is(url):
     r = requests.get(f'http://archive.is/timemap/{url}')
     if r.status_code is 200:
         return f'http://archive.is/newest/{url}'
-
-def dot_trick(url):
-    '''Returns the url with a dot after the tld. Seems to maybe trick cookies or something. IDK'''
-    domain = get_domain(url)
-    dotted_url = f'{domain}.'.join(url.partition(domain)[::2])
-    shortened_url = short(dotted_url)
-    return shortened_url
 
 def nitter(url):
     '''Converts twitter links to a randomly chosen instance of nitter'''
