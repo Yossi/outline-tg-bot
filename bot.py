@@ -333,6 +333,6 @@ if __name__ == '__main__':
     dispatcher.add_handler(MessageHandler(Filters.text, incoming))
     dispatcher.add_error_handler(error)
 
-    logging.info('outline bot started')
     updater.start_polling()
+    logging.info('outline bot started as @%s' % updater.bot.getMe()['username'])
     updater.idle()
