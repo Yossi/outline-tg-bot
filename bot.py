@@ -9,6 +9,8 @@ from functools import wraps
 from io import BytesIO, StringIO
 from secrets import LIST_OF_ADMINS, TOKEN
 from threading import Thread
+from collections import defaultdict
+from datetime import datetime, timedelta
 
 import requests
 from pyshorteners import Shortener
@@ -18,6 +20,7 @@ from telegram.ext import (CommandHandler, Filters, MessageHandler,
 from telegram.utils.helpers import mention_html
 from tldextract import extract
 from urlextract import URLExtract
+from babel.dates import format_timedelta
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=logging.INFO)
 logger = logging.getLogger("filelock")
@@ -85,6 +88,9 @@ def say(text, update, context):
 def link(url, text):
     return f'<a href="{url}">{text}</a>'
 
+def short(url):
+    return Shortener().tinyurl.short(url)
+
 def get_domain(url):
     '''Get the domain.tld of url. Ignore any subdomains'''
     extract_result = extract(url)
@@ -92,8 +98,21 @@ def get_domain(url):
         return extract_result.domain + '.' + extract_result.suffix
     return 'no domain'
 
-def short(url):
-    return Shortener().tinyurl.short(url)
+def url_bookkeeping(context):
+    url_record = context.chat_data.get('url record', defaultdict(list))
+    url_record[context.chat_data['last url']].append(datetime.now())
+    purge = []
+    for url, times in url_record.items():
+        recent = list(filter(lambda dt: dt > datetime.now()-timedelta(days=3), times))
+        if recent:
+            url_record[url] = recent
+        else:
+            purge.append(url)
+
+    for url in purge:
+        del url_record[url]
+
+    context.chat_data['url record'] = url_record
 
 def add_bypass(url, context):
     '''Puts together links with various bypass strategies'''
@@ -240,6 +259,7 @@ def incoming(update, context):
         say(text, update, context)
     if len(urls) == 1:
         context.chat_data['last url'] = urls[0]
+        url_bookkeeping(context)
 
 # user accessible commands
 @log
@@ -299,6 +319,17 @@ def translate(update, context):
 
     say('\n\n'.join(text), update, context)
 
+@log
+def repost_police(update, context):
+    url = context.chat_data.get('last url')
+    url_record = context.chat_data.get('url record')
+    previous_hits = url_record.get(url, [])
+    if len(previous_hits) >= 2:
+        most_recent = format_timedelta(previous_hits[-2] - datetime.now(), add_direction=True, threshold=1.1)
+        say(f'🙅🚨REPOST🚨🔁\n{url}\nwas recently seen {most_recent}', update, context)
+    else:
+        say('Sorry, no memory of this being reposted', update, context)
+
 # useless junk feature
 @log
 def export_urls(update, context):
@@ -324,6 +355,7 @@ if __name__ == '__main__':
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler('translate', translate))
+    dispatcher.add_handler(CommandHandler('repost', repost_police))
     dispatcher.add_handler(CommandHandler('include', include))
     dispatcher.add_handler(CommandHandler('remove', remove))
     dispatcher.add_handler(CommandHandler('list', list_active_domains))
