@@ -75,7 +75,7 @@ def chat_data(update, context):
     text = str(context.chat_data)
     if context.args and context.args[0] == 'clear' and len(context.args) > 1:
         context.chat_data.pop(' '.join(context.args[1:]), None)
-    say(text, update, context)
+    say(html.escape(text), update, context)
 
 # internal bot helper stuff
 def say(text, update, context):
