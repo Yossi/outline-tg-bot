@@ -322,8 +322,8 @@ def translate(update, context):
 @log
 def repost_police(update, context):
     url = context.chat_data.get('last url')
-    url_record = context.chat_data.get('url record')
-    previous_hits = url_record.get(url, [])
+    url_record = context.chat_data.get('url record', defaultdict(list))
+    previous_hits = url_record[url]
     if len(previous_hits) >= 2:
         most_recent = format_timedelta(previous_hits[-2] - datetime.now(), add_direction=True, threshold=1.1)
         say(f'🙅🚨REPOST🚨🔁\n{url}\nwas recently seen {most_recent}', update, context)
