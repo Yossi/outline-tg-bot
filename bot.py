@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 
 import requests
 from pyshorteners import Shortener
-from telegram import ParseMode
+from telegram import ParseMode, ChatAction
 from telegram.ext import (CommandHandler, Filters, MessageHandler,
                           PicklePersistence, Updater)
 from telegram.utils.helpers import mention_html
@@ -81,6 +81,14 @@ def chat_data(update, context):
     say(html.escape(text), update, context)
 
 # internal bot helper stuff
+def send_typing_action(func):
+    '''decorator that sends typing action while processing func command'''
+    @wraps(func)
+    def wrapped(update, context, *args, **kwargs):
+        context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
+        return func(update, context, *args, **kwargs)
+    return wrapped
+
 def say(text, update, context):
     logging.info(f'bot said:\n{text}')
     context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
@@ -246,6 +254,7 @@ def lite_mode(url):
 
 # main thing
 @log
+@send_typing_action
 def incoming(update, context):
     '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
     extractor = URLExtract()
@@ -263,6 +272,7 @@ def incoming(update, context):
 
 # user accessible commands
 @log
+@send_typing_action
 def include(update, context):
     '''Add domains to the set that gets acted on'''
     active_dict = context.chat_data.get('active domains', {})
@@ -283,6 +293,7 @@ def include(update, context):
     say(text, update, context)
 
 @log
+@send_typing_action
 def remove(update, context):
     '''See and remove domains in/from active_dict if needed'''
     active_dict = context.chat_data.get('active domains', {})
@@ -298,6 +309,7 @@ def remove(update, context):
     say(text, update, context)
 
 @log
+@send_typing_action
 def list_active_domains(update, context):
     '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
     active_dict = context.chat_data.get('active domains', {})
@@ -306,6 +318,7 @@ def list_active_domains(update, context):
     say(text, update, context)
 
 @log
+@send_typing_action
 def translate(update, context):
     '''Run the page at url through google translate'''
     text = []
@@ -320,6 +333,7 @@ def translate(update, context):
     say('\n\n'.join(text), update, context)
 
 @log
+@send_typing_action
 def repost_police(update, context):
     url = context.chat_data.get('last url')
     url_record = context.chat_data.get('url record', defaultdict(list))
