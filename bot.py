@@ -74,7 +74,7 @@ def restart(update, context):
 
 @log
 def chat_data(update, context):
-    '''See and clear chat_data'''
+    '''See and optionally clear chat_data'''
     text = str(context.chat_data)
     if context.args and context.args[0] == 'clear' and len(context.args) > 1:
         context.chat_data.pop(' '.join(context.args[1:]), None)
@@ -100,13 +100,14 @@ def short(url):
     return Shortener().tinyurl.short(url)
 
 def get_domain(url):
-    '''Get the domain.tld of url. Ignore any subdomains'''
+    '''Get the domain.tld of url. Ignore any subdomains. Is smart about things like .co.uk'''
     extract_result = extract(url)
     if extract_result.domain and extract_result.suffix:
         return extract_result.domain + '.' + extract_result.suffix
     return 'no domain'
 
 def url_bookkeeping(context):
+    '''Keeps a 3 day record of all urls and their timestamps for repost policing purposes'''
     url_record = context.chat_data.get('url record', defaultdict(list))
     url_record[context.chat_data['last url']].append(datetime.now())
     purge = []
@@ -124,7 +125,6 @@ def url_bookkeeping(context):
 
 def add_bypass(url, context):
     '''Puts together links with various bypass strategies'''
-
     if not url.startswith('http'):
         url = f'http://{url}'
 
@@ -335,6 +335,7 @@ def translate(update, context):
 @log
 @send_typing_action
 def repost_police(update, context):
+    '''Check if url has been posted in the last 3 day and call the cops if it was'''
     url = context.chat_data.get('last url')
     url_record = context.chat_data.get('url record', defaultdict(list))
     previous_hits = url_record[url]
@@ -342,7 +343,7 @@ def repost_police(update, context):
         most_recent = format_timedelta(previous_hits[-2] - datetime.now(), add_direction=True, threshold=1.1)
         say(f'🙅🚨REPOST🚨🔁\n{url}\nwas recently seen {most_recent}', update, context)
     else:
-        say('Sorry, no memory of this being reposted', update, context)
+        say('Sorry, no memory of this url being reposted', update, context)
 
 # useless junk feature
 @log
