@@ -254,7 +254,6 @@ def lite_mode(url):
 
 # main thing
 @log
-@send_typing_action
 def incoming(update, context):
     '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
     extractor = URLExtract()
@@ -264,6 +263,7 @@ def incoming(update, context):
     for url in urls:
         if get_domain(url) not in active_dict:
             continue
+        context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
         text = add_bypass(url, context=context)
         say(text, update, context)
     if len(urls) == 1:
