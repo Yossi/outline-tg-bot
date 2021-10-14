@@ -150,7 +150,7 @@ def add_bypass(url, context):
 def outline(url):
     '''Returns the url for this page at outline.com if it exists'''
     r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}')
-    if r.status_code is 200:
+    if r.status_code is 200 and "We've detected unusual activity from your computer network" not in r.text:
         return f'https://outline.com/{short(url)}'
 
 def wayback(url):
