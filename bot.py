@@ -335,7 +335,7 @@ def translate(update, context):
 @log
 @send_typing_action
 def repost_police(update, context):
-    '''Check if url has been posted in the last 3 day and call the cops if it was'''
+    '''Check if url has been posted in the last 3 days and call the cops if it was'''
     url = context.chat_data.get('last url')
     url_record = context.chat_data.get('url record', defaultdict(list))
     previous_hits = url_record[url]
