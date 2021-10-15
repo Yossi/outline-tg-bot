@@ -196,6 +196,7 @@ def amp(url):
             # f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true',
             f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true&outputType=amp',
             # f'https://{url}&outputType=amp'
+            f'https://{url}/amp',
         ]
         for amp_url in amp_url_templates:
             try:
