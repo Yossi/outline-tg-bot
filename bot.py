@@ -91,7 +91,8 @@ def send_typing_action(func):
 
 def say(text, update, context):
     logging.info(f'bot said:\n{text}')
-    context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    if text:
+        context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 def link(url, text):
     return f'<a href="{url}">{text}</a>'
