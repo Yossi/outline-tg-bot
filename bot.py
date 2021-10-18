@@ -207,7 +207,7 @@ def amp(url):
                     amp_candidates.append((size, short(amp_url)))
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 pass
-    return sorted(amp_candidates)[-1][1]
+    return sorted(amp_candidates)[-1][1] # use the largest one. probably not truncated
 
 def google_cache(url):
     gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
@@ -345,7 +345,7 @@ def repost_police(update, context):
         most_recent = format_timedelta(previous_hits[-2] - datetime.now(), add_direction=True, threshold=1.1)
         say(f'🙅🚨REPOST🚨🔁\n{url}\nwas recently seen {most_recent}', update, context)
     else:
-        say('Sorry, no memory of this url being reposted', update, context)
+        say(f'Sorry, no memory of {url} being reposted', update, context)
 
 # useless junk feature
 @log
