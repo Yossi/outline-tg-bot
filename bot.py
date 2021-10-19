@@ -194,10 +194,9 @@ def amp(url):
 
     for url in urls:
         amp_url_templates = [
-            # f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true',
             f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true&outputType=amp',
             # f'https://{url}&outputType=amp'
-            f'https://{url}/amp',
+            # f'https://{url}/amp',
         ]
         for amp_url in amp_url_templates:
             try:
@@ -223,8 +222,7 @@ def archive_is(url):
 
 def nitter(url):
     '''Converts twitter links to a randomly chosen instance of nitter'''
-    domain = get_domain(url)
-    if domain == 'twitter.com':
+    if get_domain(url) == 'twitter.com':
         url_parts = urlsplit(url)
         url_parts = url_parts._replace(netloc='twiiit.com')
         return urlunsplit(url_parts)
