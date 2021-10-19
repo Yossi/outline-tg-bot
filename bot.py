@@ -4,6 +4,8 @@ import logging
 import os
 import sys
 import traceback
+import threading
+import concurrent.futures
 from urllib.parse import urlsplit, urlunsplit
 from functools import wraps
 from io import BytesIO, StringIO
@@ -141,17 +143,20 @@ def add_bypass(url, context):
         (lite_mode, 'Lite Mode')
     )
 
-    for bypass, bp_text in bypasses:
-        try:
-            bp_url = bypass(url)
-            if bp_url:
-                text.append(link(bp_url, bp_text))
-        except:
-            devs = LIST_OF_ADMINS
-            for dev_id in devs:
-                context.bot.send_message(dev_id, f'error when trying to apply {bp_text} bypass to {url}', parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-                trace = "".join(traceback.format_tb(sys.exc_info()[2]))
-                logging.warning(trace)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(32, os.cpu_count()*5)) as executor:
+        future_to_bp_text = {executor.submit(bypass, url): bp_text for bypass, bp_text in bypasses}
+        for future in concurrent.futures.as_completed(future_to_bp_text):
+            try:
+                bp_text = future_to_bp_text[future]
+                bp_url = future.result()
+                if bp_url:
+                    text.append(link(bp_url, bp_text))
+            except:
+                devs = LIST_OF_ADMINS
+                for dev_id in devs:
+                    context.bot.send_message(dev_id, f'error when trying to apply {bp_text} bypass to {url}', parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+                    trace = "".join(traceback.format_tb(sys.exc_info()[2]))
+                    logging.warning(trace)
 
     return '\n\n'.join(text)
 
