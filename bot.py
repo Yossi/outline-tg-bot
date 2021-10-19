@@ -163,9 +163,12 @@ def add_bypass(url, context):
 # bypasses
 def outline(url):
     '''Returns the url for this page at outline.com if it exists'''
-    r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}')
-    if r.status_code is 200 and "We've detected unusual activity from your computer network" not in r.text:
-        return f'https://outline.com/{short(url)}'
+    try:
+        r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}')
+        if r.status_code is 200 and "We've detected unusual activity from your computer network" not in r.text:
+            return f'https://outline.com/{short(url)}'
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        pass
 
 def wayback(url):
     '''Returns the url of the latest snapshot if avalable on wayback machine'''
@@ -215,15 +218,21 @@ def amp(url):
 
 def google_cache(url):
     gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
-    r = requests.get(gcache_url)
-    if f'<base href="{url}' in r.text:
-        return gcache_url
+    try:
+        r = requests.get(gcache_url)
+        if f'<base href="{url}' in r.text:
+            return gcache_url
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        pass
 
 def archive_is(url):
     '''Returns the url for this page at archive.is if it exists'''
-    r = requests.get(f'http://archive.is/timemap/{url}')
-    if r.status_code is 200:
-        return f'http://archive.is/newest/{url}'
+    try:
+        r = requests.get(f'http://archive.is/timemap/{url}')
+        if r.status_code is 200:
+            return f'http://archive.is/newest/{url}'
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        pass
 
 def nitter(url):
     '''Converts twitter links to a randomly chosen instance of nitter'''
@@ -253,9 +262,12 @@ def lite_mode(url):
         lite_url = ''
 
     if lite_url:
-        r = requests.get(lite_url)
-        if r.status_code is 200:
-            return lite_url
+        try:
+            r = requests.get(lite_url)
+            if r.status_code is 200:
+                return lite_url
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+            pass
 
 # main thing
 @log
