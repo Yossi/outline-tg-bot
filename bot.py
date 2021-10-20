@@ -106,7 +106,7 @@ def get_domain(url):
     '''Get the domain.tld of url. Ignore any subdomains. Is smart about things like .co.uk'''
     extract_result = extract(url)
     if extract_result.domain and extract_result.suffix:
-        return extract_result.domain + '.' + extract_result.suffix
+        return f'{extract_result.domain}.{extract_result.suffix}'.lower()
     return 'no domain'
 
 def url_bookkeeping(context):
