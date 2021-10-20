@@ -188,17 +188,17 @@ def amp(url):
     url_parts = urlsplit(url)
     url_parts = url_parts._replace(scheme='')
 
-    urls.append(urlunsplit(url_parts)[2:]) # domain as is
+    urls.append(urlunsplit(url_parts)[2:]) # domain as is  (news.site.tld)
 
     domain = get_domain(url)
 
     url_parts = url_parts._replace(netloc=domain)
-    urls.append(urlunsplit(url_parts)[2:]) # naked domain
+    urls.append(urlunsplit(url_parts)[2:]) # naked domain  (site.tld)
 
     url_parts = url_parts._replace(netloc='amp.' + domain)
-    urls.append(urlunsplit(url_parts)[2:]) # amp subdomain
+    urls.append(urlunsplit(url_parts)[2:]) # amp subdomain  (amp.site.tld)
 
-    # There exist other ways for sites to serve up amp content. It's just a pain to figure them all out.
+    # Other ways exist for sites to serve up amp content. It's just a pain to figure them all out.
 
     for url in urls:
         amp_url_templates = [
@@ -322,7 +322,7 @@ def remove(update, context):
             del active_dict[' '.join(context.args)]
             text = f"Removed {' '.join(context.args)}"
         except KeyError:
-            text = f"Failed to remove {' '.join(context.args)}\n Check your spelling?"
+            text = f"Failed to remove {' '.join(context.args)}\nAlready gone? Check your spelling?"
     say(text, update, context)
 
 @log
