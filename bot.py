@@ -315,22 +315,21 @@ def remove(update, context):
     '''See and remove domains in/from active_dict if needed'''
     active_dict = context.chat_data.get('active domains', {})
     if not context.args and active_dict:
-        text = '</code>\n<code>'.join((f'{url} {short}' for url, short in active_dict.items()))
-        text = f"<code>{text}</code>"
+        list_active_domains(update, context)
     else:
         try:
             del active_dict[' '.join(context.args)]
             text = f"Removed {' '.join(context.args)}"
         except KeyError:
             text = f"Failed to remove {' '.join(context.args)}\nAlready gone? Check your spelling?"
-    say(text, update, context)
+        say(text, update, context)
 
 @log
 @send_typing_action
 def list_active_domains(update, context):
     '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
     active_dict = context.chat_data.get('active domains', {})
-    text = '</code>\n<code>'.join((f'{url} {short}' for url, short in active_dict.items()))
+    text = '</code>\n<code>'.join((f'{url}' for url in active_dict.keys()))
     text = f"<code>{text}</code>"
     say(text, update, context)
 
