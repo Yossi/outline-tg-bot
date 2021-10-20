@@ -1,21 +1,21 @@
 ## outlinebot
 
-Only tested with python 3.6.9. Will in all likelihood work with any python 3.6 or better.
+Only tested with python 3.6.9. Should work with any python 3.6 or better.
 
 Create a virtualenv or whatever you are using to keep this tidy.
 `virtualenv -p python3.6 venv`
 
 Install requirements with pip
-`pip3 install -r requirements.txt` (or just pip if you are in a venv)
+`pip install -r requirements.txt` (or pip3 if you aren't in a venv)
 
-Talk to @botfather and get an api key.
+Talk to [@botfather](https://t.me/botfather) and get an api key.
 Open secrets.py.example and add the api key in the right place. Also add your tg user id to list of admins.
 Save this edited file as secrets.py (no .example on the end).
 
 Run the bot.  
 `python bot.py`
 
-The bot will put out log messages at the info level as it sees things and when it talks. It does not attempt to save these logs anywhere.
+The bot will spit out log messages at the info level when messages come in or out. It does not attempt to permanently save these logs anywhere.
 
 Add the bot to a group chat and make it an admin so it can see all messages. Or talk to it in pm.
 
