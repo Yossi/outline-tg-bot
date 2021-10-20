@@ -143,7 +143,7 @@ def add_bypass(url, context):
         (lite_mode, 'Lite Mode')
     )
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(32, os.cpu_count()*5)) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(32, os.cpu_count()*5), thread_name_prefix='add_bypass') as executor:
         future_to_bp_text = {executor.submit(bypass, url): bp_text for bypass, bp_text in bypasses}
         for future in concurrent.futures.as_completed(future_to_bp_text):
             try:
@@ -182,39 +182,39 @@ def wayback(url):
 
 def amp(url):
     '''Returns the url wrapped up in AMP stuff'''
-    amp_candidates = [(0, '')]
-    urls = []
+    if get_domain(url) not in ('twitter.com',):
+        amp_candidates = [(0, '')]
+        urls = []
 
-    url_parts = urlsplit(url)
-    url_parts = url_parts._replace(scheme='')
+        url_parts = urlsplit(url)
+        url_parts = url_parts._replace(scheme='')
 
-    urls.append(urlunsplit(url_parts)[2:]) # domain as is  (news.site.tld)
+        urls.append(urlunsplit(url_parts)[2:]) # domain as is  (news.site.tld)
 
-    domain = get_domain(url)
+        domain = get_domain(url)
 
-    url_parts = url_parts._replace(netloc=domain)
-    urls.append(urlunsplit(url_parts)[2:]) # naked domain  (site.tld)
+        url_parts = url_parts._replace(netloc=domain)
+        urls.append(urlunsplit(url_parts)[2:]) # naked domain  (site.tld)
 
-    url_parts = url_parts._replace(netloc='amp.' + domain)
-    urls.append(urlunsplit(url_parts)[2:]) # amp subdomain  (amp.site.tld)
+        url_parts = url_parts._replace(netloc='amp.' + domain)
+        urls.append(urlunsplit(url_parts)[2:]) # amp subdomain  (amp.site.tld)
 
-    # Other ways exist for sites to serve up amp content. It's just a pain to figure them all out.
+        # Other ways exist for sites to serve up amp content. It's just a pain to figure them all out.
 
-    for url in urls:
-        amp_url_templates = [
-            f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true&outputType=amp',
-            # f'https://{url}&outputType=amp'
-            # f'https://{url}/amp',
-        ]
-        for amp_url in amp_url_templates:
-            try:
-                r = requests.get(amp_url)
-                size = len(r.content)
-                if r.status_code == 200:
-                    amp_candidates.append((size, short(amp_url)))
-            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-                pass
-    return sorted(amp_candidates)[-1][1] # use the largest one. probably not truncated
+        for url in urls:
+            amp_url_templates = [
+                f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true&outputType=amp',
+                f'https://{url}/amp',
+            ]
+            for amp_url in amp_url_templates:
+                try:
+                    r = requests.get(amp_url)
+                    size = len(r.content)
+                    if r.status_code == 200:
+                        amp_candidates.append((size, amp_url))
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+                    pass
+        return sorted(amp_candidates)[-1][1] # use the largest one. probably not truncated
 
 def google_cache(url):
     gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
