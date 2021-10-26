@@ -155,8 +155,8 @@ def add_bypass(url, context):
                 devs = LIST_OF_ADMINS
                 for dev_id in devs:
                     context.bot.send_message(dev_id, f'error when trying to apply {bp_text} bypass to {url}', parse_mode=ParseMode.HTML, disable_web_page_preview=True)
-                    trace = "".join(traceback.format_tb(sys.exc_info()[2]))
-                    logging.warning(trace)
+                trace = "".join(traceback.format_tb(sys.exc_info()[2]))
+                logging.warning(trace)
 
     return '\n\n'.join(text)
 
@@ -165,7 +165,9 @@ def outline(url):
     '''Returns the url for this page at outline.com if it exists'''
     try:
         r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}')
-        if r.status_code is 200 and "We've detected unusual activity from your computer network" not in r.text:
+        if r.status_code is 200 \
+           and "We've detected unusual activity from your computer network" not in r.text \
+           and "We're sorry, but this URL is not supported by Outline" not in r.text:
             return f'https://outline.com/{short(url)}'
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
