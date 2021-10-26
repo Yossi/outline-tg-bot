@@ -1,16 +1,29 @@
-## outlinebot
+# outlinebot
 
-Only tested with python 3.6.9. Should work with any python 3.6 or better.
+Requires python3.10 or better.
 
-Create a virtualenv or whatever you are using to keep this tidy.
-`virtualenv -p python3.6 venv`
+## Setup
+Get python3.10.
+`sudo add-apt-repository ppa:deadsnakes/ppa -y`
+`sudo apt update`
+`sudo apt install python3.10 python3.10-venv -y`
 
-Install requirements with pip
-`pip install -r requirements.txt` (or pip3 if you aren't in a venv)
+Clone this repo and `cd` into it.
+`git clone https://github.com/Yossi/outline-tg-bot.git`
+`cd outline-tg-bot`
 
 Talk to [@botfather](https://t.me/botfather) and get an api key.
-Open secrets.py.example and add the api key in the right place. Also add your tg user id to list of admins.
-Save this edited file as secrets.py (no .example on the end).
+Open `secrets.py.example` and add the api key in the right place. Also add your tg user id to list of admins.
+Save this edited file as `secrets.py` (no .example on the end).
+
+Create a virtualenv.
+`python3.10 -m venv venv/`
+Activate it.
+`source venv/bin/activate`
+Update pip to avoid warnings.
+`pip install --upgrade pip`
+Install requirements.
+`pip install --upgrade -r requirements.txt`
 
 Run the bot.  
 `python bot.py`
