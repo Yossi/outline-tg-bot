@@ -3,31 +3,34 @@
 Requires python3.10 or better.
 
 ## Setup
-Get python3.10.
-`sudo add-apt-repository ppa:deadsnakes/ppa -y`
-`sudo apt update`
-`sudo apt install python3.10 python3.10-venv -y`
+Get python3.10.  
+`sudo add-apt-repository ppa:deadsnakes/ppa -y`  
+`sudo apt update`  
+`sudo apt install python3.10 python3.10-venv -y`  
 
-Clone this repo and `cd` into it.
-`git clone https://github.com/Yossi/outline-tg-bot.git`
+Clone this repo and `cd` into it.  
+`git clone https://github.com/Yossi/outline-tg-bot.git`  
 `cd outline-tg-bot`
 
 Talk to [@botfather](https://t.me/botfather) and get an api key.
 Open `secrets.py.example` and add the api key in the right place. Also add your tg user id to list of admins.
-Save this edited file as `secrets.py` (no .example on the end).
+Save this edited file as `secrets.py` (no `.example` on the end).
 
-Create a virtualenv.
-`python3.10 -m venv venv/`
-Activate it.
-`source venv/bin/activate`
-Update pip to avoid warnings.
-`pip install --upgrade pip`
-Install requirements.
+Create a virtualenv.  
+`python3.10 -m venv venv/`  
+Activate it.  
+`source venv/bin/activate`  
+Update pip to avoid warnings.  
+`pip install --upgrade pip`  
+Install requirements.  
 `pip install --upgrade -r requirements.txt`
 
 Run the bot.  
 `python bot.py`
 
+You can instead run the bot with `git ls-files | entr -r python bot.py` and the bot will autoreload when any of the git tracked files change.
+
+## Documentation
 The bot will spit out log messages at the info level when messages come in or out. It does not attempt to permanently save these logs anywhere.
 
 Add the bot to a group chat and make it an admin so it can see all messages. Or talk to it in pm.
