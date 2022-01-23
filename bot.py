@@ -139,6 +139,7 @@ def add_bypass(url, context):
         (amp, 'AMP'),
         (google_cache, 'Google Cache'),
         (archive_is, 'archive.is'),
+        (remove_js, 'RemoveJS'),
         (nitter, 'Twiiit'),
         (lite_mode, 'Lite Mode')
     )
@@ -233,6 +234,15 @@ def archive_is(url):
         r = requests.get(f'http://archive.is/timemap/{url}')
         if r.status_code is 200:
             return f'http://archive.is/newest/{url}'
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        pass
+
+def remove_js(url):
+    remove_js_url = f'https://remove-js.com/{url}'
+    try:
+        r = requests.get(remove_js_url)
+        if 'Make sure you enter a valid URL (e.g., http://example.com)' not in r.text:
+            return remove_js_url
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
