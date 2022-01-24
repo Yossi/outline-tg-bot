@@ -208,11 +208,13 @@ def amp(url):
         for url in urls:
             amp_url_templates = [
                 f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true&outputType=amp',
+                #f'https://cdn.ampproject.org/v/s/{url}?_amp=true&outputType=amp',
                 f'https://{url}/amp',
             ]
             for amp_url in amp_url_templates:
                 try:
-                    r = requests.get(amp_url)
+                    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'}
+                    r = requests.get(amp_url, headers=headers)
                     size = len(r.content)
                     if r.status_code == 200:
                         amp_candidates.append((size, amp_url))
