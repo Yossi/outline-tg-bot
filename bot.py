@@ -28,6 +28,8 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=log
 logger = logging.getLogger("filelock")
 logger.setLevel(logging.ERROR) # filelock can stfu
 
+__version__ = '1.2.0'
+
 # logging
 def error(update, context):
     '''Send tracebacks to the dev(s)'''
@@ -361,6 +363,11 @@ def list_active_domains(update, context):
 
 @log
 @send_typing_action
+def version(update, context):
+    say(__version__, update, context)
+
+@log
+@send_typing_action
 def translate(update, context):
     '''Run the page at url through google translate'''
     text = []
@@ -411,6 +418,7 @@ if __name__ == '__main__':
     updater = Updater(token=TOKEN, persistence=persistence, use_context=True)
     dispatcher = updater.dispatcher
 
+    dispatcher.add_handler(CommandHandler('version', version))
     dispatcher.add_handler(CommandHandler('translate', translate))
     dispatcher.add_handler(CommandHandler('repost', repost_police))
     dispatcher.add_handler(CommandHandler('include', include))
