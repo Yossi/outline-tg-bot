@@ -138,6 +138,7 @@ def add_bypass(url, context):
         (wayback, 'Wayback Machine'),
         (amp, 'AMP'),
         (google_cache, 'Google Cache'),
+        (twelve_ft, '12ft.io'),
         (archive_is, 'archive.is'),
         (remove_js, 'RemoveJS'),
         (nitter, 'Twiiit'),
@@ -241,8 +242,19 @@ def remove_js(url):
     remove_js_url = f'https://remove-js.com/{url}'
     try:
         r = requests.get(remove_js_url)
-        if 'Make sure you enter a valid URL (e.g., http://example.com)' not in r.text:
+        if 'Make sure you enter a valid URL (e.g., http://example.com)' not in r.text and \
+           'detected unusual activity from your computer network' not in r.text:
             return remove_js_url
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        pass
+
+def twelve_ft(url):
+    twelve_ft_url = f'https://12ft.io/{url}'
+    try:
+        r = requests.get(f'https://12ft.io/api/proxy?ref=&q={url}')
+        if '12ft has been disabled for this site' not in r.text and \
+           'detected unusual activity from your computer network' not in r.text:
+            return twelve_ft_url
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
