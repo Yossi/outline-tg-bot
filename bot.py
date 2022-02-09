@@ -169,7 +169,7 @@ def outline(url):
     '''Returns the url for this page at outline.com if it exists'''
     try:
         r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}')
-        if r.status_code is 200 \
+        if r.status_code == 200 \
            and "We've detected unusual activity from your computer network" not in r.text \
            and "We're sorry, but this URL is not supported by Outline" not in r.text:
             return f'https://outline.com/{short(url)}'
@@ -237,7 +237,7 @@ def archive_is(url):
     '''Returns the url for this page at archive.is if it exists'''
     try:
         r = requests.get(f'http://archive.is/timemap/{url}')
-        if r.status_code is 200:
+        if r.status_code == 200:
             return f'http://archive.is/newest/{url}'
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
@@ -292,7 +292,7 @@ def lite_mode(url):
     if lite_url:
         try:
             r = requests.get(lite_url)
-            if r.status_code is 200:
+            if r.status_code == 200:
                 return lite_url
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
             pass
