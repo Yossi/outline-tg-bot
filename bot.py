@@ -28,7 +28,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=log
 logger = logging.getLogger("filelock")
 logger.setLevel(logging.ERROR) # filelock can stfu
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 # logging
 def error(update, context):
@@ -358,6 +358,8 @@ def list_active_domains(update, context):
     '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
     active_dict = context.chat_data.get('active domains', {})
     text = '</code>\n<code>'.join((f'{url}' for url in active_dict.keys()))
+    if not text:
+        text = 'no domains yet'
     text = f"<code>{text}</code>"
     say(text, update, context)
 
