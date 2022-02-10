@@ -1,26 +1,27 @@
+import concurrent.futures
 import csv
 import html
 import logging
 import os
 import sys
 import traceback
-import concurrent.futures
-from urllib.parse import urlsplit, urlunsplit
+from collections import defaultdict
+from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO, StringIO
 from threading import Thread
-from collections import defaultdict
-from datetime import datetime, timedelta
+from urllib.parse import urlsplit, urlunsplit
 
 import requests
+from babel.dates import format_timedelta
 from pyshorteners import Shortener
-from telegram import ParseMode, ChatAction
+from telegram import ChatAction, ParseMode
 from telegram.ext import (CommandHandler, Filters, MessageHandler,
                           PicklePersistence, Updater)
 from telegram.utils.helpers import mention_html
 from tldextract import extract
 from urlextract import URLExtract
-from babel.dates import format_timedelta
+
 from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's because you didn't create secrets.py correctly (or at all).
 
 
