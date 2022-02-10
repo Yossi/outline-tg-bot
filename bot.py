@@ -29,7 +29,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=log
 logger = logging.getLogger("filelock")
 logger.setLevel(logging.ERROR) # filelock can stfu
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 # logging
 def error(update, context):
