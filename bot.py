@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 import traceback
-import threading
 import concurrent.futures
 from urllib.parse import urlsplit, urlunsplit
 from functools import wraps
