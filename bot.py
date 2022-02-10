@@ -8,7 +8,6 @@ import concurrent.futures
 from urllib.parse import urlsplit, urlunsplit
 from functools import wraps
 from io import BytesIO, StringIO
-from secrets import LIST_OF_ADMINS, TOKEN
 from threading import Thread
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -22,6 +21,8 @@ from telegram.utils.helpers import mention_html
 from tldextract import extract
 from urlextract import URLExtract
 from babel.dates import format_timedelta
+from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's because you didn't create secrets.py correctly (or at all).
+
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=logging.INFO)
 logger = logging.getLogger("filelock")
@@ -415,7 +416,7 @@ def import_urls(update, context):
 
 
 if __name__ == '__main__':
-    persistence = PicklePersistence(filename='bot.persist', on_flush=False)
+    persistence = PicklePersistence(filename='data/bot.persist', on_flush=False)
     updater = Updater(token=TOKEN, persistence=persistence, use_context=True)
     dispatcher = updater.dispatcher
 
