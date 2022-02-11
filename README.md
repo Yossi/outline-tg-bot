@@ -36,8 +36,8 @@ Clone this repo and `cd` into it.
 `cd outline-tg-bot`
 
 Talk to [@botfather](https://t.me/botfather) and get an api key.
-Open `secrets.py.example` and add the api key in the right place. Also add your tg user id to list of admins.
-Save this edited file as `secrets.py` (no `.example` on the end).
+Open `data/secrets.py.example` and add the api key in the right place. Also add your tg user id to list of admins.
+Save this edited file as `data/secrets.py` (no `.example` on the end).
 
 Create a virtualenv.  
 `python3.10 -m venv venv/`  
