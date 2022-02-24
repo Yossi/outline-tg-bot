@@ -25,12 +25,6 @@ As a bot admin you have some commands that only you can run:
 If the bot throws an exception it will send it to you in a pm.
 
 ## Setup
-Requires python3.10 or better.  
-Get python3.10.  
-`sudo add-apt-repository ppa:deadsnakes/ppa -y`  
-`sudo apt update`  
-`sudo apt install python3.10 python3.10-venv -y`  
-
 Clone this repo and `cd` into it.  
 `git clone https://github.com/Yossi/outline-tg-bot.git`  
 `cd outline-tg-bot`
@@ -38,6 +32,14 @@ Clone this repo and `cd` into it.
 Talk to [@botfather](https://t.me/botfather) and get an api key.
 Open `data/secrets.py.example` and add the api key in the right place. Also add your tg user id to list of admins.
 Save this edited file as `data/secrets.py` (no `.example` on the end).
+
+- **If you are going to use docker skip ahead to [that section](#docker).**
+
+Requires python3.10 or better.  
+Get python3.10.  
+`sudo add-apt-repository ppa:deadsnakes/ppa -y`  
+`sudo apt update`  
+`sudo apt install python3.10 python3.10-venv -y`  
 
 Create a virtualenv.  
 `python3.10 -m venv venv/`  
@@ -53,3 +55,8 @@ Run the bot.
 
 You can instead run the bot with `git ls-files | entr -r python bot.py` and the bot will autoreload when any of the git tracked files change.
 
+### Docker
+Build the docker image.  
+`docker build --pull -t outlinebot .`  
+Run it while passing in the full path to the data/ directory.  
+`docker run -v /full/path/to/data/:/home/botuser/data/ --cap-drop=ALL outlinebot`  
