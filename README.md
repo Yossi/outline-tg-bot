@@ -33,7 +33,7 @@ Talk to [@botfather](https://t.me/botfather) and get an api key.
 Open `data/secrets.py.example` and add the api key in the right place. Also add your tg user id to list of admins.
 Save this edited file as `data/secrets.py` (no `.example` on the end).
 
-- **If you are going to use docker skip ahead to [that section](#docker).**
+- **If you are going to use docker, skip ahead to [that section](#docker).**
 
 Requires python3.10 or better.  
 Get python3.10.  
@@ -58,5 +58,5 @@ You can instead run the bot with `git ls-files | entr -r python bot.py` and the 
 ### Docker
 Build the docker image.  
 `docker build --pull -t outlinebot .`  
-Run it while passing in the full path to the data/ directory.  
+Run it while passing in the full path to the `data/` directory.  
 `docker run -v /full/path/to/data/:/home/botuser/data/ --cap-drop=ALL outlinebot`  
