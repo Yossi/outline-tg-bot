@@ -295,6 +295,9 @@ def lite_mode(url):
     # elif domain == 'cnn.com':
     #     lite_url = 'http://lite.cnn.com/en/article/h_{unidentified_hash}'
 
+    elif domain == 'cbc.ca':
+        lite_url = urlunsplit(url_parts._replace(path='/lite/story/' + url_parts.path.split('-')[-1]))
+
     else:
         lite_url = ''
 
