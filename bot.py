@@ -27,7 +27,7 @@ from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's becaus
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=logging.INFO)
 
-__version__ = '1.2.2'
+__version__ = '1.3.0'
 
 # logging
 def error(update, context):
