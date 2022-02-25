@@ -22,12 +22,10 @@ from telegram.utils.helpers import mention_html
 from tldextract import extract
 from urlextract import URLExtract
 
-from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's because you didn't create secrets.py correctly (or at all).
+from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's because you didn't create secrets.py correctly (or at all). Or you didnt pass docker run -v /full/path/to/data/:/home/botuser/data/
 
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=logging.INFO)
-logger = logging.getLogger("filelock")
-logger.setLevel(logging.ERROR) # filelock can stfu
 
 __version__ = '1.2.2'
 
@@ -144,6 +142,7 @@ def add_bypass(url, context):
         (twelve_ft, '12ft.io'),
         (archive_is, 'archive.is'),
         (remove_js, 'RemoveJS'),
+        (txtify_it, 'txtify.it'),
         (nitter, 'Twiiit'),
         (lite_mode, 'Lite Mode')
     )
@@ -260,6 +259,15 @@ def twelve_ft(url):
         if '12ft has been disabled for this site' not in r.text and \
            'detected unusual activity from your computer network' not in r.text:
             return twelve_ft_url
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        pass
+
+def txtify_it(url):
+    txtify_it_url = f'https://txtify.it/{url}'
+    try:
+        r = requests.get(txtify_it_url)
+        if r.content:
+            return txtify_it_url
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
