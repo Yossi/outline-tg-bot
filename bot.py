@@ -148,7 +148,6 @@ def add_bypass(url, context):
     bypasses = (
         (outline, 'Outline'),
         (wayback, 'Wayback Machine'),
-        (amp, 'AMP'),
         (google_cache, 'Google Cache'),
         (twelve_ft, '12ft.io'),
         (archive_is, 'archive.is'),
@@ -198,45 +197,6 @@ def wayback(url):
             return archive_org_url
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
-
-@timer
-def amp(url):
-    '''Returns the url wrapped up in AMP stuff'''
-    if get_domain(url) not in ('twitter.com',):
-        amp_candidates = [(0, '')]
-        urls = []
-
-        url_parts = urlsplit(url)
-        url_parts = url_parts._replace(scheme='')
-
-        urls.append(urlunsplit(url_parts)[2:]) # domain as is  (news.site.tld)
-
-        domain = get_domain(url)
-
-        url_parts = url_parts._replace(netloc=domain)
-        urls.append(urlunsplit(url_parts)[2:]) # naked domain  (site.tld)
-
-        url_parts = url_parts._replace(netloc='amp.' + domain)
-        urls.append(urlunsplit(url_parts)[2:]) # amp subdomain  (amp.site.tld)
-
-        # Other ways exist for sites to serve up amp content. It's just a pain to figure them all out.
-
-        for url in urls:
-            amp_url_templates = [
-                f'https://cdn.ampproject.org/v/s/{url}?amp_js_v=a3&amp_gsa=1&_amp=true&outputType=amp',
-                #f'https://cdn.ampproject.org/v/s/{url}?_amp=true&outputType=amp',
-                f'https://{url}/amp',
-            ]
-            for amp_url in amp_url_templates:
-                try:
-                    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'}
-                    r = requests.get(amp_url, headers=headers)
-                    size = len(r.content)
-                    if r.status_code == 200:
-                        amp_candidates.append((size, amp_url))
-                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-                    pass
-        return sorted(amp_candidates)[-1][1] # use the largest one. probably not truncated
 
 @timer
 def google_cache(url):
