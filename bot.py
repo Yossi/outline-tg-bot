@@ -11,13 +11,13 @@ from functools import wraps
 from io import BytesIO, StringIO
 from threading import Thread
 from urllib.parse import urlsplit, urlunsplit
+from time import time
 
 import requests
 from babel.dates import format_timedelta
 from pyshorteners import Shortener
 from telegram import ChatAction, ParseMode
-from telegram.ext import (CommandHandler, Filters, MessageHandler,
-                          PicklePersistence, Updater)
+from telegram.ext import CommandHandler, Filters, MessageHandler, PicklePersistence, Updater
 from telegram.utils.helpers import mention_html
 from tldextract import extract
 from urlextract import URLExtract
@@ -59,6 +59,16 @@ def log(func):
         logging.info(f'{name} ({id}) said:\n{update.effective_message.text}')
         return func(update, context, *args, **kwargs)
     return wrapped
+
+def timer(func):
+    '''Decorator to measure how long a function ran'''
+    def wrap_func(*args, **kwargs):
+        t1 = time()
+        result = func(*args, **kwargs)
+        t2 = time()
+        logging.debug(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
+        return result
+    return wrap_func
 
 # admin
 @log
@@ -127,6 +137,7 @@ def url_bookkeeping(context):
 
     context.chat_data['url record'] = url_record
 
+@timer
 def add_bypass(url, context):
     '''Puts together links with various bypass strategies'''
     if not url.startswith('http'):
@@ -165,6 +176,7 @@ def add_bypass(url, context):
     return '\n\n'.join(text)
 
 # bypasses
+@timer
 def outline(url):
     '''Returns the url for this page at outline.com if it exists'''
     try:
@@ -176,6 +188,7 @@ def outline(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+@timer
 def wayback(url):
     '''Returns the url of the latest snapshot if avalable on wayback machine'''
     try:
@@ -186,6 +199,7 @@ def wayback(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+@timer
 def amp(url):
     '''Returns the url wrapped up in AMP stuff'''
     if get_domain(url) not in ('twitter.com',):
@@ -224,6 +238,7 @@ def amp(url):
                     pass
         return sorted(amp_candidates)[-1][1] # use the largest one. probably not truncated
 
+@timer
 def google_cache(url):
     gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
     try:
@@ -233,6 +248,7 @@ def google_cache(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+@timer
 def archive_is(url):
     '''Returns the url for this page at archive.is if it exists'''
     try:
@@ -242,6 +258,7 @@ def archive_is(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+@timer
 def remove_js(url):
     remove_js_url = f'https://remove-js.com/{url}'
     try:
@@ -252,6 +269,7 @@ def remove_js(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+@timer
 def twelve_ft(url):
     twelve_ft_url = f'https://12ft.io/{url}'
     try:
@@ -262,6 +280,7 @@ def twelve_ft(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+@timer
 def txtify_it(url):
     txtify_it_url = f'https://txtify.it/{url}'
     try:
@@ -271,6 +290,7 @@ def txtify_it(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+@timer
 def nitter(url):
     '''Converts twitter links to a randomly chosen instance of nitter'''
     if get_domain(url) == 'twitter.com':
@@ -278,6 +298,7 @@ def nitter(url):
         url_parts = url_parts._replace(netloc='twiiit.com')
         return urlunsplit(url_parts)
 
+@timer
 def lite_mode(url):
     '''Converts certain news sites to their lite versions'''
     domain = get_domain(url)
