@@ -179,7 +179,7 @@ def add_bypass(url, context):
 def outline(url):
     '''Returns the url for this page at outline.com if it exists'''
     try:
-        r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}')
+        r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}', timeout=2)
         if r.status_code == 200 \
            and "We've detected unusual activity from your computer network" not in r.text \
            and "We're sorry, but this URL is not supported by Outline" not in r.text:
@@ -191,7 +191,7 @@ def outline(url):
 def wayback(url):
     '''Returns the url of the latest snapshot if avalable on wayback machine'''
     try:
-        r = requests.get(f'http://archive.org/wayback/available?url={url}')
+        r = requests.get(f'http://archive.org/wayback/available?url={url}', timeout=2)
         archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
         if archive_org_url:
             return archive_org_url
@@ -202,7 +202,7 @@ def wayback(url):
 def google_cache(url):
     gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
     try:
-        r = requests.get(gcache_url)
+        r = requests.get(gcache_url, timeout=2)
         if f'<base href="{url}' in r.text:
             return gcache_url
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
@@ -212,7 +212,7 @@ def google_cache(url):
 def archive_is(url):
     '''Returns the url for this page at archive.is if it exists'''
     try:
-        r = requests.get(f'http://archive.is/timemap/{url}')
+        r = requests.get(f'http://archive.is/timemap/{url}', timeout=2)
         if r.status_code == 200:
             return f'http://archive.is/newest/{url}'
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
@@ -222,7 +222,7 @@ def archive_is(url):
 def remove_js(url):
     remove_js_url = f'https://remove-js.com/{url}'
     try:
-        r = requests.get(remove_js_url)
+        r = requests.get(remove_js_url, timeout=2)
         if 'Make sure you enter a valid URL (e.g., http://example.com)' not in r.text and \
            'detected unusual activity from your computer network' not in r.text:
             return remove_js_url
@@ -233,7 +233,7 @@ def remove_js(url):
 def twelve_ft(url):
     twelve_ft_url = f'https://12ft.io/{url}'
     try:
-        r = requests.get(f'https://12ft.io/api/proxy?ref=&q={url}')
+        r = requests.get(f'https://12ft.io/api/proxy?ref=&q={url}', timeout=2)
         if '12ft has been disabled for this site' not in r.text and \
            'detected unusual activity from your computer network' not in r.text:
             return twelve_ft_url
@@ -244,7 +244,7 @@ def twelve_ft(url):
 def txtify_it(url):
     txtify_it_url = f'https://txtify.it/{url}'
     try:
-        r = requests.get(txtify_it_url)
+        r = requests.get(txtify_it_url, timeout=2)
         if r.content:
             return txtify_it_url
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
@@ -284,7 +284,7 @@ def lite_mode(url):
 
     if lite_url:
         try:
-            r = requests.get(lite_url)
+            r = requests.get(lite_url, timeout=2)
             if r.status_code == 200:
                 return lite_url
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
