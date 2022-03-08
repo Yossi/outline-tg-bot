@@ -152,7 +152,7 @@ def add_bypass(url, context):
     text = []
 
     bypasses = (
-        (outline, 'Outline'),
+        # (outline, 'Outline'), # outline seems to be killed. rip
         (wayback, 'Wayback Machine'),
         (google_cache, 'Google Cache'),
         (twelve_ft, '12ft.io'),
