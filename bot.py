@@ -16,6 +16,7 @@ from time import time
 import requests
 from babel.dates import format_timedelta
 from pyshorteners import Shortener
+import telegram
 from telegram import ChatAction, ParseMode
 from telegram.ext import CommandHandler, Filters, MessageHandler, PicklePersistence, Updater
 from telegram.utils.helpers import mention_html
@@ -106,6 +107,11 @@ def say(text, update, context):
     logging.info(f'bot said:\n{text}')
     if text:
         context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+
+
+def delete(message_id, update, context):
+    context.bot.delete_message(chat_id=update.effective_message.chat_id, message_id=message_id)
+    logging.info(f'bot deleted message {message_id}')
 
 def link(url, text):
     return f'<a href="{url}">{text}</a>'
@@ -389,6 +395,22 @@ def repost_police(update, context):
     else:
         say(f'Sorry, no memory of {url} being reposted', update, context)
 
+@log
+def delete_message(update, context):
+    '''reply to a bot message with /delete to get rid of it for everyone'''
+    if not update.effective_message.reply_to_message:
+        return
+
+    reply_to_user_id = update.effective_message.reply_to_message.from_user.id
+    if bot_user_id == reply_to_user_id:
+        target_id = update.effective_message.reply_to_message.message_id
+        reply_id = update.effective_message.message_id
+        try:
+            delete(reply_id, update, context) # hide the evidence
+            delete(target_id, update, context) # do the kill
+        except telegram.error.BadRequest:
+            logging.info('message probably too old to delete')
+
 # useless junk feature
 @log
 def export_urls(update, context):
@@ -419,12 +441,16 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler('include', include))
     dispatcher.add_handler(CommandHandler('remove', remove))
     dispatcher.add_handler(CommandHandler('list', list_active_domains))
+    dispatcher.add_handler(CommandHandler('delete', delete_message))
     dispatcher.add_handler(CommandHandler('export', export_urls))
     dispatcher.add_handler(CommandHandler('r', restart, filters=Filters.user(user_id=LIST_OF_ADMINS)))
     dispatcher.add_handler(CommandHandler('data', chat_data, filters=Filters.user(user_id=LIST_OF_ADMINS)))
     dispatcher.add_handler(MessageHandler(Filters.text, incoming))
     dispatcher.add_error_handler(error)
 
+    me = updater.bot.get_me()
+    bot_user_id = me['id']
+
     updater.start_polling()
-    logging.info('outline bot started as @%s' % updater.bot.getMe()['username'])
+    logging.info(f'outline bot started as @{me["username"]}')
     updater.idle()
