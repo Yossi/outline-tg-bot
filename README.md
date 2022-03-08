@@ -3,17 +3,17 @@
 
 ## What this does
 This is a telegram bot that attempts to create URL hacks that help people read news sites with user hostile designs. 
-The bot will spit out log messages at the info level when messages come in or out. It does not attempt to permanently save these logs anywhere.
 
 Add the bot to a group chat and make it an admin so it can see all messages. Or talk to it in pm.
 
 Regular users can use the bot as follows:  
-Post message as usual. The bot will silently detect and remember the last link it sees.  
-When you know that the the most recent link seen needs to get the bot treatment you say `/include`.  
+Post message as usual. The bot will silently detect and remember the most recent link it sees.  
+When you know that the the most recent link needs to get the bot treatment you say `/include`.  
 Immediately and from now on the bot will attempt to post a list of bypass links for all urls from that domain.  
 You can also add domains manually with `/include domain.tld`.  
 `/list` will show all the domains the bot is set to act on.  
 `/remove domain.tld` to remove one.  
+Reply to a bot message with `/delete` and the bot will delete that message and your `/delete` message too to keep things tidy. Only works on bot messages less than 48 hours old.  
 
 Additionally, users can request a google translate version of the most recent link by sending `/translate`.  
 `/translate` defaults to english but will also accept a list of ISO-639-1 language codes. For example `/translate en de es`.
@@ -22,16 +22,18 @@ As a bot admin you have some commands that only you can run:
 `/r` - restart the bot.  
 `/data` - Show all the stored data for the chat where you sent the command from.  
 `/data clear <key>` - delete all the data in `<key>`.  
-If the bot throws an exception it will send it to you in a pm.
+If the bot throws an exception it will send it to you in a pm.  
+The bot will spit out log messages at the info level when messages come in or out. It does not attempt to permanently save these logs anywhere.  
+Data stored by the bot (like the list of domains to bypass) lives in `data/bot.persist`.  
 
 ## Setup
 Clone this repo and `cd` into it.  
 `git clone https://github.com/Yossi/outline-tg-bot.git`  
 `cd outline-tg-bot`
 
-Talk to [@botfather](https://t.me/botfather) and get an api key.
-Open `data/secrets.py.example` and add the api key in the right place. Also add your tg user id to list of admins.
-Save this edited file as `data/secrets.py` (no `.example` on the end).
+Talk to the [@botfather](https://t.me/botfather) and get an api key.
+Open `data/secrets.py.example` and add the api key in the right place. Also add your tg user id to the list of admins.
+Save this edited file as `data/secrets.py` (without `.example` on the end).
 
 - **If you are going to use docker, skip ahead to [that section](#docker).**
 
@@ -45,7 +47,7 @@ Create a virtualenv.
 `python3.10 -m venv venv/`  
 Activate it.  
 `source venv/bin/activate`  
-Update pip to avoid warnings.  
+Update pip to avoid warning.  
 `pip install --upgrade pip`  
 Install requirements.  
 `pip install --upgrade -r requirements.txt`
@@ -60,3 +62,13 @@ Build the docker image.
 `docker build --pull -t outlinebot .`  
 Run it while passing in the full path to the `data/` directory.  
 `docker run -v /full/path/to/data/:/home/botuser/data/ --cap-drop=ALL outlinebot`  
+
+## List of bypasses
+- ~~[Outline](outline.com)~~ Dead as of March 2022  
+- [Wayback Machine](archive.org)
+- [archive.is](archive.is)  
+- Google Search Cache  
+- [12ft Ladder](12ft.io)  
+- [RemoveJS](remove-js.com)  
+- [txtify it](txtify.it)  
+- [Twiiit](twiiit.com) For twitter. Chooses a random nitter instance for you.  
