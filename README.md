@@ -64,11 +64,11 @@ Run it while passing in the full path to the `data/` directory.
 `docker run -v /full/path/to/data/:/home/botuser/data/ --cap-drop=ALL outlinebot`  
 
 ## List of bypasses
-- ~~[Outline](outline.com)~~ Dead as of March 2022  
-- [Wayback Machine](archive.org)
-- [archive.is](archive.is)  
+- ~~[Outline](https://outline.com)~~ Dead as of March 2022  
+- [Wayback Machine](https://archive.org)
+- [archive.is](https://archive.is)  
 - Google Search Cache  
-- [12ft Ladder](12ft.io)  
-- [RemoveJS](remove-js.com)  
-- [txtify it](txtify.it)  
-- [Twiiit](twiiit.com) For twitter. Chooses a random nitter instance for you.  
+- [12ft Ladder](https://12ft.io)  
+- [RemoveJS](https://remove-js.com)  
+- [txtify it](https://txtify.it)  
+- [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
