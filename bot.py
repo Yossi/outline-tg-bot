@@ -324,19 +324,28 @@ def lite_mode(url):
 @log
 def incoming(update, context):
     '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
-    extractor = URLExtract()
+    extractor = URLExtract(limit=1)
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text, check_dns=True)
+    url = urls[0] if urls else ''
+
     active_dict = context.chat_data.get('active domains', {}) # this s/could have been a set instead. stuck as dict for legacy reasons
-    for url in urls:
-        if get_domain(url) not in active_dict:
-            continue
-        context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
-        text = add_bypass(url, context=context)
-        say(text, update, context)
-    if len(urls) == 1:
-        context.chat_data['last url'] = urls[0]
-        url_bookkeeping(context)
+    text = add_bypass(url, context=context) if get_domain(url) in active_dict else ''
+
+    incoming_id = update.effective_message.message_id
+    response_record = context.chat_data.get('response record', {})
+
+    if update.message:
+        response_id = say(text, update, context)
+        response_record_add(incoming_id, response_id, context)
+
+    elif update.edited_message:
+        if incoming_id in response_record: # ie, edited message has already been responded to previously
+            edit(text, response_record[incoming_id], update, context)
+
+        else:
+            response_id = say(text, update, context)
+            response_record_add(incoming_id, response_id, context)
 
 # user accessible commands
 @log
