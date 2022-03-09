@@ -127,6 +127,8 @@ def response_record_add(incoming_id, response_id, context):
     if response_id:
         response_record = context.chat_data.get('response record', {})
         response_record[incoming_id] = response_id
+        if len(response_record) > 10:
+            response_record.pop(next(iter(response_record))) # pop and throw away old one
         context.chat_data['response record'] = response_record
 
 def response_record_remove(message_id, context):
