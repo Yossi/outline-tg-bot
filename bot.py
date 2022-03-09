@@ -330,9 +330,7 @@ def include(update, context):
     except TypeError:
         domain = text = 'no domain'
     if domain != 'no domain':
-        active_dict[domain] = False
-        if len(context.args) == 2:
-            active_dict[domain] = bool(context.args[1])
+        active_dict[domain] = None # really wish this was a set
         context.chat_data['active domains'] = active_dict
     say(text, update, context)
 
