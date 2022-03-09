@@ -108,6 +108,15 @@ def say(text, update, context):
     if text:
         return context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True).message_id
 
+def edit(text, message_id, update, context):
+    logging.info(f'bot edited {message_id} to:\n{text}')
+    if text:
+        try:
+            return context.bot.edit_message_text(chat_id=update.effective_message.chat_id, message_id=message_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True).message_id
+        except BadRequest:
+            logging.info('no change')
+    else:
+        delete(message_id, update, context)
 
 def delete(message_id, update, context):
     context.bot.delete_message(chat_id=update.effective_message.chat_id, message_id=message_id)
