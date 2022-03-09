@@ -112,6 +112,19 @@ def say(text, update, context):
 def delete(message_id, update, context):
     context.bot.delete_message(chat_id=update.effective_message.chat_id, message_id=message_id)
     logging.info(f'bot deleted message {message_id}')
+    response_record_remove(message_id, context)
+
+def response_record_add(incoming_id, response_id, context):
+    if response_id:
+        response_record = context.chat_data.get('response record', {})
+        response_record[incoming_id] = response_id
+        context.chat_data['response record'] = response_record
+
+def response_record_remove(message_id, context):
+    response_record = context.chat_data.get('response record', {})
+    incoming_id = next((incoming_id for incoming_id, response_id in response_record.items() if response_id == message_id), None)
+    response_record.pop(incoming_id, None) # remove from the record
+    context.chat_data['response record'] = response_record
 
 def link(url, text):
     return f'<a href="{url}">{text}</a>'
