@@ -16,10 +16,10 @@ from time import time
 import requests
 from babel.dates import format_timedelta
 from pyshorteners import Shortener
-import telegram
 from telegram import ChatAction, ParseMode
 from telegram.ext import CommandHandler, Filters, MessageHandler, PicklePersistence, Updater
 from telegram.utils.helpers import mention_html
+from telegram.error import BadRequest
 from tldextract import extract
 from urlextract import URLExtract
 
@@ -408,7 +408,7 @@ def delete_message(update, context):
         try:
             delete(reply_id, update, context) # hide the evidence
             delete(target_id, update, context) # do the kill
-        except telegram.error.BadRequest:
+        except BadRequest:
             logging.info('message probably too old to delete')
 
 # useless junk feature
