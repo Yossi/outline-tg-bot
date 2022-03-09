@@ -106,7 +106,7 @@ def send_typing_action(func):
 def say(text, update, context):
     logging.info(f'bot said:\n{text}')
     if text:
-        context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        return context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True).message_id
 
 
 def delete(message_id, update, context):
