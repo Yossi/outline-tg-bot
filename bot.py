@@ -324,7 +324,7 @@ def lite_mode(url):
 @log
 def incoming(update, context):
     '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
-    extractor = URLExtract(limit=1)
+    extractor = URLExtract()
     extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text, check_dns=True)
     url = urls[0] if urls else ''
