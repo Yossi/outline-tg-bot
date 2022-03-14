@@ -29,6 +29,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s\n%(message)s', level=log
 
 __version__ = '1.5.1'
 
+
 # logging
 def error(update, context):
     '''Send tracebacks to the dev(s)'''
@@ -38,7 +39,7 @@ def error(update, context):
     trace = "".join(traceback.format_tb(sys.exc_info()[2]))
     payload = ""
     if update.effective_user:
-        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}' # if it blows up here it's possibly because you used python < 3.6
+        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'  # if it blows up here it's possibly because you used python < 3.6
     if update.effective_chat:
         payload += f' within the chat <i>{html.escape(str(update.effective_chat.title))}</i>'
         if update.effective_chat.username:
@@ -50,6 +51,7 @@ def error(update, context):
         context.bot.send_message(dev_id, text, parse_mode=ParseMode.HTML)
     raise
 
+
 def log(func):
     '''Decorator that logs who said what to the bot'''
     @wraps(func)
@@ -60,6 +62,7 @@ def log(func):
         return func(update, context, *args, **kwargs)
     return wrapped
 
+
 def timer(func):
     '''Decorator to measure how long a function ran'''
     def wrap_func(*args, **kwargs):
@@ -69,6 +72,7 @@ def timer(func):
         logging.debug(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
         return result
     return wrap_func
+
 
 # admin
 @log
@@ -85,6 +89,7 @@ def restart(update, context):
     update.message.reply_text("...and we're back")
     logging.info("...and we're back")
 
+
 @log
 def chat_data(update, context):
     '''See and optionally clear chat_data'''
@@ -92,6 +97,7 @@ def chat_data(update, context):
     if context.args and context.args[0] == 'clear' and len(context.args) > 1:
         context.chat_data.pop(' '.join(context.args[1:]), None)
     say(html.escape(text), update, context)
+
 
 # internal bot helper stuff
 def send_typing_action(func):
@@ -102,12 +108,16 @@ def send_typing_action(func):
         return func(update, context, *args, **kwargs)
     return wrapped
 
+
 def say(text, update, context):
+    '''send text to channel'''
     logging.info(f'bot said:\n{text}')
     if text:
         return context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True).message_id
 
+
 def edit(text, message_id, update, context):
+    '''edit message message_id to say text. delete entirely if text is blank'''
     logging.info(f'bot edited {message_id} to:\n{text}')
     if text:
         try:
@@ -117,24 +127,31 @@ def edit(text, message_id, update, context):
     else:
         delete(message_id, update, context)
 
+
 def delete(message_id, update, context):
+    '''remove message message_id'''
     context.bot.delete_message(chat_id=update.effective_message.chat_id, message_id=message_id)
     logging.info(f'bot deleted message {message_id}')
     response_record_remove(message_id, context)
 
+
 def response_record_add(incoming_id, response_id, context):
+    '''track message_ids of what message triggered the bot and what message the bot responded'''
     if response_id:
         response_record = context.chat_data.get('response record', {})
         response_record[incoming_id] = response_id
         if len(response_record) > 10:
-            response_record.pop(next(iter(response_record))) # pop and throw away old one
+            response_record.pop(next(iter(response_record)))  # pop and throw away old one
         context.chat_data['response record'] = response_record
 
+
 def response_record_remove(message_id, context):
+    '''remove deleted message_id from record'''
     response_record = context.chat_data.get('response record', {})
     incoming_id = next((incoming_id for incoming_id, response_id in response_record.items() if response_id == message_id), None)
-    response_record.pop(incoming_id, None) # remove from the record
+    response_record.pop(incoming_id, None)  # remove from the record
     context.chat_data['response record'] = response_record
+
 
 def link(url, text):
     return f'<a href="{url}">{text}</a>'
@@ -146,6 +163,7 @@ def get_domain(url):
     if extract_result.domain and extract_result.suffix:
         return f'{extract_result.domain}.{extract_result.suffix}'.lower()
     return 'no domain'
+
 
 def url_bookkeeping(context):
     '''Keeps a 3 day record of all urls and their timestamps for repost policing purposes'''
@@ -163,6 +181,7 @@ def url_bookkeeping(context):
         del url_record[url]
 
     context.chat_data['url record'] = url_record
+
 
 @timer
 def add_bypass(url, context):
@@ -200,6 +219,7 @@ def add_bypass(url, context):
 
     return '\n\n'.join(text)
 
+
 # bypasses
 @timer
 def wayback(url):
@@ -212,6 +232,7 @@ def wayback(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+
 @timer
 def google_cache(url):
     gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
@@ -222,6 +243,7 @@ def google_cache(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+
 @timer
 def archive_is(url):
     '''Returns the url for this page at archive.is if it exists'''
@@ -231,6 +253,7 @@ def archive_is(url):
             return f'http://archive.is/newest/{url}'
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
+
 
 @timer
 def remove_js(url):
@@ -243,6 +266,7 @@ def remove_js(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+
 @timer
 def twelve_ft(url):
     twelve_ft_url = f'https://12ft.io/{url}'
@@ -254,6 +278,7 @@ def twelve_ft(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+
 @timer
 def txtify_it(url):
     txtify_it_url = f'https://txtify.it/{url}'
@@ -264,6 +289,7 @@ def txtify_it(url):
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         pass
 
+
 @timer
 def nitter(url):
     '''Converts twitter links to a randomly chosen instance of nitter'''
@@ -271,6 +297,7 @@ def nitter(url):
         url_parts = urlsplit(url)
         url_parts = url_parts._replace(netloc='twiiit.com')
         return urlunsplit(url_parts)
+
 
 @timer
 def lite_mode(url):
@@ -283,7 +310,7 @@ def lite_mode(url):
 
     elif domain == 'npr.org':
         try:
-            lite_url = urlunsplit(url_parts._replace(netloc='text.npr.org', path=url_parts.path.split('/')[4])) # this [4] can conceivably wind up out of range
+            lite_url = urlunsplit(url_parts._replace(netloc='text.npr.org', path=url_parts.path.split('/')[4]))  # this [4] can conceivably wind up out of range
         except:
             lite_url = ''
 
@@ -304,16 +331,17 @@ def lite_mode(url):
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
             pass
 
+
 # main thing
 @log
 def incoming(update, context):
     '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
     extractor = URLExtract()
-    extractor.update_when_older(7) # gets the latest list of TLDs from iana.org every 7 days
+    extractor.update_when_older(7)  # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text, check_dns=True)
     url = urls[0] if urls else ''
 
-    active_dict = context.chat_data.get('active domains', {}) # this s/could have been a set instead. stuck as dict for legacy reasons
+    active_dict = context.chat_data.get('active domains', {})  # this s/could have been a set instead. stuck as dict for legacy reasons
     text = add_bypass(url, context=context) if get_domain(url) in active_dict else ''
 
     incoming_id = update.effective_message.message_id
@@ -324,12 +352,13 @@ def incoming(update, context):
         response_record_add(incoming_id, response_id, context)
 
     elif update.edited_message:
-        if incoming_id in response_record: # ie, edited message has already been responded to previously
+        if incoming_id in response_record:  # ie, edited message has already been responded to previously
             edit(text, response_record[incoming_id], update, context)
 
         else:
             response_id = say(text, update, context)
             response_record_add(incoming_id, response_id, context)
+
 
 # user accessible commands
 @log
@@ -347,9 +376,10 @@ def include(update, context):
     except TypeError:
         domain = text = 'no domain'
     if domain != 'no domain':
-        active_dict[domain] = None # really wish this was a set
+        active_dict[domain] = None  # really wish this was a set
         context.chat_data['active domains'] = active_dict
     say(text, update, context)
+
 
 @log
 @send_typing_action
@@ -366,6 +396,7 @@ def remove(update, context):
             text = f"Failed to remove {' '.join(context.args)}\nAlready gone? Check your spelling?"
         say(text, update, context)
 
+
 @log
 @send_typing_action
 def list_active_domains(update, context):
@@ -377,10 +408,12 @@ def list_active_domains(update, context):
     text = f"<code>{text}</code>"
     say(text, update, context)
 
+
 @log
 @send_typing_action
 def version(update, context):
     say(__version__, update, context)
+
 
 @log
 @send_typing_action
@@ -397,6 +430,7 @@ def translate(update, context):
 
     say('\n\n'.join(text), update, context)
 
+
 @log
 @send_typing_action
 def repost_police(update, context):
@@ -410,6 +444,7 @@ def repost_police(update, context):
     else:
         say(f'Sorry, no memory of {url} being reposted', update, context)
 
+
 @log
 def delete_message(update, context):
     '''reply to a bot message with /delete to get rid of it for everyone'''
@@ -421,23 +456,25 @@ def delete_message(update, context):
         target_id = update.effective_message.reply_to_message.message_id
         reply_id = update.effective_message.message_id
         try:
-            delete(reply_id, update, context) # hide the evidence
-            delete(target_id, update, context) # do the kill
+            delete(reply_id, update, context)  # hide the evidence
+            delete(target_id, update, context)  # do the kill
         except BadRequest:
             logging.info('message probably too old to delete')
+
 
 # useless junk feature
 @log
 def export_urls(update, context):
     '''Make settings avaliable as a CSV file'''
     chat_id = update.effective_message.chat_id
-    sio = StringIO() # csv insists on strs...
+    sio = StringIO()  # csv insists on strs...
     w = csv.writer(sio)
     w.writerows(context.chat_data['active domains'].items())
     sio.seek(0)
-    bio = BytesIO(sio.read().encode('utf8')) # ...but TG demands bytes
+    bio = BytesIO(sio.read().encode('utf8'))  # ...but TG demands bytes
     bio.name = f'{chat_id}.csv'
     context.bot.send_document(chat_id=chat_id, document=bio)
+
 
 @log
 def import_urls(update, context):
