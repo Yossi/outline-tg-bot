@@ -15,7 +15,6 @@ from time import time
 
 import requests
 from babel.dates import format_timedelta
-from pyshorteners import Shortener
 from telegram import ChatAction, ParseMode
 from telegram.ext import CommandHandler, Filters, MessageHandler, PicklePersistence, Updater
 from telegram.utils.helpers import mention_html
@@ -140,8 +139,6 @@ def response_record_remove(message_id, context):
 def link(url, text):
     return f'<a href="{url}">{text}</a>'
 
-def short(url):
-    return Shortener().tinyurl.short(url)
 
 def get_domain(url):
     '''Get the domain.tld of url. Ignore any subdomains. Is smart about things like .co.uk'''
@@ -176,7 +173,6 @@ def add_bypass(url, context):
     text = []
 
     bypasses = (
-        # (outline, 'Outline'), # outline seems to be killed. rip
         (wayback, 'Wayback Machine'),
         (google_cache, 'Google Cache'),
         (twelve_ft, '12ft.io'),
@@ -205,18 +201,6 @@ def add_bypass(url, context):
     return '\n\n'.join(text)
 
 # bypasses
-@timer
-def outline(url):
-    '''Returns the url for this page at outline.com if it exists'''
-    try:
-        r = requests.get(f'https://api.outline.com/v3/parse_article?source_url={short(url)}', timeout=2)
-        if r.status_code == 200 \
-           and "We've detected unusual activity from your computer network" not in r.text \
-           and "We're sorry, but this URL is not supported by Outline" not in r.text:
-            return f'https://outline.com/{short(url)}'
-    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-        pass
-
 @timer
 def wayback(url):
     '''Returns the url of the latest snapshot if avalable on wayback machine'''
