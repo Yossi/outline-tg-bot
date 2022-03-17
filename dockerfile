@@ -1,12 +1,12 @@
 FROM python:3.10-alpine
-RUN apk --update-cache upgrade
+#RUN apk --update-cache upgrade
 
 RUN adduser -D botuser
 USER botuser
 WORKDIR /home/botuser
 
-COPY requirements.txt .
+# see .dockerignore for what files will be copied
+COPY . .
 RUN pip install --no-cache-dir --no-warn-script-location --requirement requirements.txt
 
-COPY bot.py .
 CMD ["python", "bot.py"]
