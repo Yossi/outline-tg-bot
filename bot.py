@@ -347,17 +347,11 @@ def incoming(update, context):
     incoming_id = update.effective_message.message_id
     response_record = context.chat_data.get('response record', {})
 
-    if update.message:
+    if incoming_id in response_record:  # ie, edited message has already been responded to previously
+        edit(text, response_record[incoming_id], update, context)  # will delete the response if the new text is empty
+    else:
         response_id = say(text, update, context)
         response_record_add(incoming_id, response_id, context)
-
-    elif update.edited_message:
-        if incoming_id in response_record:  # ie, edited message has already been responded to previously
-            edit(text, response_record[incoming_id], update, context)
-
-        else:
-            response_id = say(text, update, context)
-            response_record_add(incoming_id, response_id, context)
 
 
 # user accessible commands
