@@ -339,7 +339,12 @@ def incoming(update, context):
     extractor = URLExtract()
     extractor.update_when_older(7)  # gets the latest list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(update.effective_message.text, check_dns=True)
-    url = urls[0] if urls else ''
+    if urls:
+        url = urls[0]
+        context.chat_data['last url'] = url
+        url_bookkeeping(context)
+    else:
+        url = ''
 
     active_dict = context.chat_data.get('active domains', {})  # this s/could have been a set instead. stuck as dict for legacy reasons
     text = add_bypass(url, context=context) if get_domain(url) in active_dict else ''
