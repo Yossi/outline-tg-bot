@@ -64,7 +64,7 @@ def log(func):
 
 
 def timer(func):
-    '''Decorator to measure how long a function ran'''
+    '''Decorator to measure how long a function ran. Need to set logging level to debug to see results'''
     def wrap_func(*args, **kwargs):
         t1 = time()
         result = func(*args, **kwargs)
