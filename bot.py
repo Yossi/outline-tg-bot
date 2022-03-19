@@ -354,7 +354,7 @@ def incoming(update, context):
 
     if incoming_id in response_record:  # ie, edited message has already been responded to previously
         edit(text, response_record[incoming_id], update, context)  # will delete the response if the new text is empty
-    else:
+    elif text:  # this gets checked inside say() as well, but that creates phanton "bot said: nothing" type messages
         response_id = say(text, update, context)
         response_record_add(incoming_id, response_id, context)
 
