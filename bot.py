@@ -446,16 +446,16 @@ def repost_police(update, context):
 
 @log
 def delete_message(update, context):
-    '''reply to a bot message with /delete to get rid of it for everyone'''
+    '''If someone replies to a bot message with /delete, get rid of it for everyone'''
     if not update.effective_message.reply_to_message:
         return
 
     reply_to_user_id = update.effective_message.reply_to_message.from_user.id
     if bot_user_id == reply_to_user_id:
         target_id = update.effective_message.reply_to_message.message_id
-        reply_id = update.effective_message.message_id
+        # reply_id = update.effective_message.message_id
         try:
-            delete(reply_id, update, context)  # hide the evidence
+            # delete(reply_id, update, context)  # hide the evidence
             delete(target_id, update, context)  # do the kill
         except BadRequest:
             logging.info('message probably too old to delete')
