@@ -199,6 +199,7 @@ def add_bypass(url, context):
         (remove_js, 'RemoveJS'),
         (txtify_it, 'txtify.it'),
         (nitter, 'Twiiit'),
+        (unnitter, 'Twitter'),
         (lite_mode, 'Lite Mode')
     )
 
@@ -298,6 +299,17 @@ def nitter(url):
         url_parts = url_parts._replace(netloc='twiiit.com')
         return urlunsplit(url_parts)
 
+@timer
+def unnitter(url):
+    '''Convert nitter link back to twitter'''
+    try:
+        r = requests.get(url, timeout=2)
+        if '<a class="icon-bird" title="Open in Twitter" href="https://twitter.com/' in r.text:
+            url_parts = urlsplit(url)
+            url_parts = url_parts._replace(netloc='twitter.com')
+            return urlunsplit(url_parts)
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        pass
 
 @timer
 def lite_mode(url):
