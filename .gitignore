@@ -1,4 +1,8 @@
-
+data/bot.persist
 secrets.py
+venv/
+
 .idea/
 __pycache__/
+.cache/
+.local/

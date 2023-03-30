@@ -1,9 +1,9 @@
-FROM python:3.10-alpine
+FROM python:3.11-alpine
 #RUN apk --update-cache upgrade
 
-RUN adduser -D botuser
-USER botuser
-WORKDIR /home/botuser
+RUN adduser -D outlinebot
+USER outlinebot
+WORKDIR /home/outlinebot
 
 # see .dockerignore for what files will be copied
 COPY . .

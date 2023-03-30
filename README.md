@@ -13,18 +13,25 @@ Immediately and from now on the bot will attempt to post a list of bypass links 
 You can also add domains manually with `/include domain.tld`.  
 `/list` will show all the domains the bot is set to act on.  
 `/remove domain.tld` to remove one.  
-Reply to a bot message with `/delete` and the bot will delete that message and your `/delete` message too to keep things tidy. Only works on bot messages less than 48 hours old.  
+Reply to a bot message with `/delete` and the bot will delete that message and your `/delete` message too to keep things tidy.  
+Only works on bot messages less than 48 hours old (telegram restriction) or less than 10 bot messages ago (bot restriction).  
 
 Additionally, users can request a google translate version of the most recent link by sending `/translate`.  
 `/translate` defaults to english but will also accept a list of ISO-639-1 language codes. For example `/translate en de es`.
 
 As a bot admin you have some commands that only you can run:  
-`/r` - restart the bot.  
 `/data` - Show all the stored data for the chat where you sent the command from.  
 `/data clear <key>` - delete all the data in `<key>`.  
 If the bot throws an exception it will send it to you in a pm.  
 The bot will spit out log messages at the info level when messages come in or out. It does not attempt to permanently save these logs anywhere.  
 Data stored by the bot (like the list of domains to bypass) lives in `data/bot.persist`.  
+
+## Maintenance
+Idealy new versions of the bot will be backward compatible with the existing `data/bot.persist` file, so back that up.  
+But just in case, the list of domains to bypass can be exported per group with the `/export` command. This will create a simple text file with the domains listed in it. The filename will be `{chat_id}_urls_backup.txt`.  
+To import this list back into the bot you just upload a text file with the exact fielname to match the chat you're in. You can even forward the message from `/export` back into the chat and not have to download the file.  
+
+You can also run `/start` to find the chat_id to use for this filename, and your user_id to use in the list of admins.    
 
 ## Setup
 Clone this repo and `cd` into it.  
@@ -60,13 +67,14 @@ You can instead run the bot with `git ls-files | entr -r python bot.py` and the 
 ### Docker
 Build the docker image.  
 `docker build --pull -t outlinebot .`  
-Run it while passing in the full path to the `data/` directory.  
-`docker run -v /full/path/to/data/:/home/botuser/data/ --cap-drop=ALL outlinebot`  
+Run it while passing in the full path to the `data/` directory. (`/home/you/outline-tg-bot/data/` perhaps?)  
+`docker run -v /full/path/to/data/:/home/outlinebot/data/ --cap-drop=ALL outlinebot`  
 
 ## List of bypasses
 - ~~[Outline](https://outline.com)~~ Dead as of March 2022  
 - [Wayback Machine](https://archive.org)
 - [archive.is](https://archive.is)  
+- [Ghost Archive](https://ghostarchive.org)  
 - Google Search Cache  
 - [12ft Ladder](https://12ft.io)  
 - [RemoveJS](https://remove-js.com)  
