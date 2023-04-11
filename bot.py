@@ -110,24 +110,25 @@ async def chat_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 # internal bot helper stuff
-async def say(text: str, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def say(text: str, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int | None:
     '''Send text to channel'''
     logging.info(f'bot said:\n{text}')
     if text:
         sent_message = await context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True, disable_notification=True)
-    return sent_message.message_id
+        return sent_message.message_id
 
 
-async def edit(text: str, message_id: int, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def edit(text: str, message_id: int, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int | None:
     '''Edit message `message_id` to say `text`. Delete entirely if `text` is blank'''
     logging.info(f'bot edited {message_id} to:\n{text}')
     if text:
         try:
-            await context.bot.edit_message_text(chat_id=update.effective_message.chat_id, message_id=message_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True).message_id
+            edited_message = await context.bot.edit_message_text(chat_id=update.effective_message.chat_id, message_id=message_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+            return edited_message.message_id
         except BadRequest:
             logging.info('no change')
     else:
-        delete(message_id, update, context)
+        await delete(message_id, update, context)
 
 
 async def delete(message_id: int, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -367,12 +368,15 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = await add_bypasses(url, context=context) if get_domain(url) in active_dict else ''
 
     incoming_id = update.effective_message.message_id
+    response_id = None
     response_record = context.chat_data.get('response record', {})
 
     if incoming_id in response_record:  # Ie, edited message has already been responded to previously
-        edit(text, response_record[incoming_id], update, context)  # Will delete the response if the new text is empty
+        response_id = await edit(text, response_record[incoming_id], update, context)  # Will delete the response if the new text is empty
     elif text:  # This gets checked inside say() as well, but that creates phanton "bot said: nothing" type log messages
         response_id = await say(text, update, context)
+
+    if response_id:
         response_record_add(incoming_id, response_id, context)
 
 
