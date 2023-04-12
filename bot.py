@@ -26,7 +26,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logg
 logger = logging.getLogger(__name__)
 
 
-__version__ = '2.1.0'
+__version__ = '2.1.1'
 
 
 # logging
@@ -185,6 +185,8 @@ def link(url: str, text: str) -> str:
 @timer
 async def add_bypasses(url: str, context: ContextTypes.DEFAULT_TYPE) -> str:
     '''Puts together links with various bypass strategies'''
+    if not url:
+        return ''
     if not url.startswith('http'):
         url = f'http://{url}'
 
@@ -260,10 +262,11 @@ async def twelve_ft(url: str, client: httpx.AsyncClient) -> str | None:
     twelve_ft_url = f'https://12ft.io/{url}'
     try:
         r = await client.get(f'https://12ft.io/api/proxy?ref=&q={url}', timeout=2)
+        r.raise_for_status()
         if '12ft has been disabled for this site' not in r.text and \
            'detected unusual activity from your computer network' not in r.text:
             return twelve_ft_url
-    except httpx.TimeoutException:
+    except (httpx.TimeoutException, httpx.HTTPStatusError):
         pass
 
 
@@ -290,7 +293,6 @@ async def ghostarchive(url: str, client: httpx.AsyncClient) -> str | None:
         path = r.text[start:end]
         if path:
             return f'https://ghostarchive.org{path}'
-
     except httpx.TimeoutException:
         pass
 
@@ -301,7 +303,7 @@ async def txtify_it(url: str, client: httpx.AsyncClient) -> str | None:
     txtify_it_url = f'https://txtify.it/{url}'
     try:
         r = await client.get(txtify_it_url, timeout=2)
-        if r.content:
+        if r.content.strip():
             return txtify_it_url
     except httpx.TimeoutException:
         pass
@@ -323,11 +325,12 @@ async def unnitter(url: str, client: httpx.AsyncClient) -> str | None:
     '''Convert nitter link back to twitter'''
     try:
         r = await client.get(url, timeout=2)
+        r.raise_for_status()
         if '<a class="icon-bird" title="Open in Twitter" href="https://twitter.com/' in r.text:
             url_parts = urlsplit(url)
             url_parts = url_parts._replace(netloc='twitter.com')
             return urlunsplit(url_parts)
-    except httpx.TimeoutException:
+    except (httpx.TimeoutException, httpx.HTTPStatusError):
         pass
 
 
