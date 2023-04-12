@@ -26,7 +26,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logg
 logger = logging.getLogger(__name__)
 
 
-__version__ = '2.0.2'
+__version__ = '2.1.0'
 
 
 # logging
@@ -158,6 +158,16 @@ def response_record_remove(message_id: int, context: ContextTypes.DEFAULT_TYPE) 
     incoming_id = next((incoming_id for incoming_id, response_id in response_record.items() if response_id == message_id), None)
     response_record.pop(incoming_id, None)  # Remove from the record
     context.chat_data['response record'] = response_record
+
+
+def get_url(text: str) -> str:
+    extractor = URLExtract()
+    extractor.update_when_older(7)  # Gets the latest list of TLDs from iana.org every 7 days
+    urls = extractor.find_urls(text, check_dns=True)
+    if urls:
+        return urls[0]
+    else:
+        return ''
 
 
 def get_domain(url: str) -> str:
@@ -359,14 +369,9 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
 @log
 async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
-    extractor = URLExtract()
-    extractor.update_when_older(7)  # Gets the latest list of TLDs from iana.org every 7 days
-    urls = extractor.find_urls(update.effective_message.text, check_dns=True)
-    if urls:
-        url = urls[0]
+    url = get_url(update.effective_message.text)
+    if url:
         context.chat_data['last url'] = url
-    else:
-        url = ''
 
     active_dict = context.chat_data.get('active domains', {})  # This sh/could have been a set instead. stuck as dict for legacy reasons
     text = await add_bypasses(url, context=context) if get_domain(url) in active_dict else ''
@@ -402,12 +407,19 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @send_typing_action
 async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Run the page at url through google translate'''
-    text = []
-    url = context.chat_data.get('last url')
+    if update.effective_message.reply_to_message:
+        url = get_url(update.effective_message.reply_to_message.text)
+    else:
+        url = context.chat_data.get('last url')
+
+    if not url:
+        return
+
     languages = ['en']
     if context.args:
         languages = context.args
 
+    text = []
     for lang in languages:
         text.append(link(f'https://translate.google.com/translate?tl={lang}&u={url}', f'Translation to {lang}'))
 
@@ -420,17 +432,25 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Add domains to the set that gets acted on'''
     active_dict = context.chat_data.get('active domains', {})
     try:
-        if not context.args:
-            domain = get_domain(context.chat_data.get('last url'))
-            text = await add_bypasses(context.chat_data.get('last url'), context=context)
-        else:
+        if context.args:
             domain = get_domain(context.args[0])
             text = f'{context.args[0]} added'
+        elif update.effective_message.reply_to_message:
+            url = get_url(update.effective_message.reply_to_message.text)
+            domain = text = get_domain(url)
+            if url:
+                text = await add_bypasses(url, context=context)
+        else:
+            domain = get_domain(context.chat_data.get('last url'))
+            text = await add_bypasses(context.chat_data.get('last url'), context=context)
+
     except TypeError:
         domain = text = 'no domain'
+
     if domain != 'no domain':
         active_dict[domain] = None  # Really wish this was a set instead of dict
         context.chat_data['active domains'] = active_dict
+
     await say(text, update, context)
 
 
