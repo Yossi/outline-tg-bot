@@ -10,14 +10,14 @@ Regular users can use the bot as follows:
 Post message as usual. The bot will silently detect and remember the most recent link it sees.  
 When you know that the the most recent link needs to get the bot treatment you say `/include`.  
 Immediately and from now on the bot will attempt to post a list of bypass links for all urls from that domain.  
-You can also add domains manually with `/include domain.tld`.  
+You can also send `/include` as a reply to a massage to traget the domain in that message even if it isnt the most resent one anymore. Or you can add domains manually with `/include domain.tld`.  
 `/list` will show all the domains the bot is set to act on.  
 `/remove domain.tld` to remove one.  
-Reply to a bot message with `/delete` and the bot will delete that message and your `/delete` message too to keep things tidy.  
+Reply to a bot message with `/delete` and the bot will delete that message and your `/delete` message too (if it can) to keep things tidy.  
 Only works on bot messages less than 48 hours old (telegram restriction) or less than 10 bot messages ago (bot restriction).  
 
 Additionally, users can request a google translate version of the most recent link by sending `/translate`.  
-`/translate` defaults to english but will also accept a list of ISO-639-1 language codes. For example `/translate en de es`.
+`/translate` defaults to english but will also accept a list of ISO-639-1 language codes. For example `/translate en fr es`.
 
 As a bot admin you have some commands that only you can run:  
 `/data` - Show all the stored data for the chat where you sent the command from.  
