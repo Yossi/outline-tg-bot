@@ -2,6 +2,7 @@ import asyncio
 import functools
 import html
 import logging
+import pprint
 import sys
 import time
 import traceback
@@ -25,7 +26,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logg
 logger = logging.getLogger(__name__)
 
 
-__version__ = '2.0.0'
+__version__ = '2.0.2'
 
 
 # logging
@@ -100,12 +101,15 @@ def send_typing_action(func):
 @log
 async def chat_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''See and optionally clear chat_data'''
-    text = str(context.chat_data)
-    if context.args and context.args[0] == 'clear':
-        if len(context.args) > 1:
+    if context.args:
+        if context.args[0] == 'clear' and len(context.args) > 1:
             context.chat_data.pop(' '.join(context.args[1:]), None)
+            text = pprint.pformat(context.chat_data)
         else:
             text = '/data clear <key>'
+    else:
+        text = pprint.pformat(context.chat_data)
+
     await say(html.escape(text), update, context)
 
 
