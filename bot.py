@@ -26,7 +26,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logg
 logger = logging.getLogger(__name__)
 
 
-__version__ = '2.1.1'
+__version__ = '2.1.2'
 
 
 # logging
