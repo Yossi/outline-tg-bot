@@ -288,6 +288,8 @@ async def ghostarchive(url: str, client: httpx.AsyncClient) -> str | None:
     ghostarchive_url = f'https://ghostarchive.org/search?term={url}'
     try:
         r = await client.get(ghostarchive_url, timeout=2)
+        if 'No archives for that site.' in r.text:
+            return
         start = r.text.find('/archive/')
         end = r.text.find('">', start)
         path = r.text[start:end]
