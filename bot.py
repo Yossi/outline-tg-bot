@@ -31,7 +31,7 @@ __version__ = '2.1.2'
 
 # logging
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Log the error and send a telegram message to notify the developer."""
+    '''Log the error and send a telegram message to notify the developer.'''
     logger.error(msg="Exception while handling an update:", exc_info=context.error)
 
     if not update:
@@ -398,7 +398,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @log
 @send_typing_action
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = f'Friendship with bot started.\nFYI, your telegram userid is <code>{update.effective_user.id}</code>, this chat_id is <code>{update.effective_chat.id}</code> and this bot\'s user_id is <code>{application.bot.id}</code>'
+    text = f'Friendship with bot started.\nFYI, your telegram user id is <code>{update.effective_user.id}</code>, this chat id is <code>{update.effective_chat.id}</code> and this bot\'s user id is <code>{application.bot.id}</code>'
     await say(text, update, context)
 
 
