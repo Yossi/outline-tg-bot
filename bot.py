@@ -36,17 +36,18 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
     if not update:
         return
-    trace = "".join(traceback.format_tb(sys.exc_info()[2]))
+
+    trace = "".join(traceback.format_exception(None, context.error, context.error.__traceback__))
     payload = ""
     if update.effective_user:
         payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'  # if it blows up here it's possibly because you used python < 3.6
     if update.effective_chat:
-        payload += f' within the chat <i>{html.escape(str(update.effective_chat.title))}</i>'
+        if update.effective_chat.title:
+            payload += f' within the chat <i>{html.escape(str(update.effective_chat.title))}</i>'
         if update.effective_chat.username:
             payload += f' (@{update.effective_chat.username})'
-    if update.poll:
-        payload += f' with the poll id {update.poll.id}.'
-    message = f"Hey.\n The error <code>{html.escape(str(context.error))}</code> happened{payload}. The full traceback:\n\n<code>{html.escape(trace)}</code>"
+
+    message = f"Hey.\n The error <code>{sys.exc_info()[0].__name__}: {html.escape(str(context.error))}</code> happened{payload}. The full traceback:\n\n<code>{html.escape(trace)}</code>"
 
     for admin_id in LIST_OF_ADMINS:
         await context.bot.send_message(chat_id=admin_id, text=message, parse_mode=ParseMode.HTML)
