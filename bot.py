@@ -15,7 +15,7 @@ from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import (Application, CommandHandler, ContextTypes,
                           MessageHandler, PicklePersistence, filters)
-from telegram.helpers import mention_html
+from telegram.helpers import mention_html, create_deep_linked_url
 from tldextract import extract
 from urlextract import URLExtract
 
@@ -399,7 +399,11 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @log
 @send_typing_action
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = f'Friendship with bot started.\nFYI, your telegram user id is <code>{update.effective_user.id}</code>, this chat id is <code>{update.effective_chat.id}</code> and this bot\'s user id is <code>{application.bot.id}</code>'
+    url = create_deep_linked_url(context.bot.username, 'yes', group=True)
+    text = f'Use <a href="{url}">this link</a> to share me to another group.\n' \
+           f'FYI, your telegram user id is <code>{update.effective_user.id}</code>, ' \
+           f'this chat id is <code>{update.effective_chat.id}</code> ' \
+           f'and this bot\'s user id is <code>{application.bot.id}</code>'
     await say(text, update, context)
 
 
