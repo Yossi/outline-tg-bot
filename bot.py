@@ -13,13 +13,12 @@ import httpx
 from telegram import Update
 from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest
-from telegram.ext import (Application, CommandHandler, ContextTypes,
-                          MessageHandler, PicklePersistence, filters)
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, PicklePersistence, filters
 from telegram.helpers import mention_html, create_deep_linked_url
 from tldextract import extract
 from urlextract import URLExtract
 
-from data.secrets import (LIST_OF_ADMINS, TOKEN)  # If it crashed here it's because you didn't create secrets.py correctly (or at all). Or you didn't pass docker run -v /full/path/to/data/:/home/botuser/data/
+from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's because you didn't create secrets.py correctly (or at all). Or you didn't pass docker run -v /full/path/to/data/:/home/botuser/data/
 
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logging.INFO)
@@ -40,7 +39,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     trace = "".join(traceback.format_exception(None, context.error, context.error.__traceback__))
     payload = ""
     if update.effective_user:
-        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'  # if it blows up here it's possibly because you used python < 3.6
+        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'  # if it blows up here it's possibly because you've used python < 3.6
     if update.effective_chat:
         if update.effective_chat.title:
             payload += f' within the chat <i>{html.escape(str(update.effective_chat.title))}</i>'
@@ -78,7 +77,7 @@ def timer(func):
 
 
 def snitch(func):
-    '''Decorator to catch and handle errors that come up from invidual bypasses'''
+    '''Decorator to catch and handle errors that come up in the invidual bypasses'''
     @functools.wraps(func)
     async def wrapped(*args, **kwargs):
         try:
@@ -400,7 +399,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @send_typing_action
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     url = create_deep_linked_url(context.bot.username, 'yes', group=True)
-    text = f'Use <a href="{url}">this link</a> to share me to another group.\n' \
+    text = f'Use <a href="{url}">this link</a> to share this bot to another group.\n' \
            f'FYI, your telegram user id is <code>{update.effective_user.id}</code>, ' \
            f'this chat id is <code>{update.effective_chat.id}</code> ' \
            f'and this bot\'s user id is <code>{application.bot.id}</code>'
