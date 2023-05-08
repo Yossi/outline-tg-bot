@@ -503,10 +503,10 @@ async def delete_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     reply_to_user_id = update.effective_message.reply_to_message.from_user.id
     if bot_user_id == reply_to_user_id:
         target_id = update.effective_message.reply_to_message.message_id
-        # reply_id = update.effective_message.message_id
+        reply_id = update.effective_message.message_id
         try:
-            # delete(reply_id, update, context)  # Clean up the /delete command. Only works if the bot has permission to delete others' messages
             await delete(target_id, update, context)
+            await delete(reply_id, update, context)  # Clean up the /delete command. Only works if the bot has permission to delete others' messages
         except BadRequest:
             logging.info('message probably too old to delete')
 
