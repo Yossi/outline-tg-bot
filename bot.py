@@ -1,3 +1,9 @@
+'''Telegram bot that primarily attempts to perform url hacks to get around paywalls'''
+
+
+__version__ = '2.1.3'
+
+
 import asyncio
 import functools
 import html
@@ -23,9 +29,6 @@ from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's becaus
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-__version__ = '2.1.2'
 
 
 # logging
