@@ -582,7 +582,7 @@ async def post_init(application: Application) -> None:
         'Once added, you post a link, then you say /include and from then on the bot will act to try to get around all links from that domain when they are posted. '
     )
 
-    await application.bot.set_my_short_description('Paywall bypass finder bot')
+    await application.bot.set_my_short_description(f'Paywall bypass finder bot {__version__}')
 
 
 if __name__ == '__main__':
