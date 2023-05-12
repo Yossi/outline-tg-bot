@@ -414,7 +414,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def version(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     url = 'https://raw.githubusercontent.com/Yossi/outline-tg-bot/master/VERSION'
     r = httpx.get(url)
-    if r.text != __version__:
+    if r.text.strip() != __version__:
         await say(f'Local version: {__version__}\nOnline version: <a href="https://github.com/Yossi/outline-tg-bot">{r.text}</a>', update, context)
     else:
         await say(__version__, update, context)
