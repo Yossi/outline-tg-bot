@@ -28,12 +28,12 @@ jobs:
         id: extract_version
         run: |
           python -c "from bot import __version__;print(__version__)" > VERSION
-          echo "::set-output name=version::$(cat VERSION)"
+          echo "version={$(cat VERSION)}" >> $GITHUB_OUTPUT
 
       - name: Check for changes in VERSION file
         id: version_changes
         run: |
-          git diff --quiet --exit-code -- VERSION || echo "::set-output name=changed::true"
+          git diff --quiet --exit-code -- VERSION || echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Commit version file
         run: |
