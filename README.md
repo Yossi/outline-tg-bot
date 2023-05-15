@@ -78,5 +78,5 @@ Run it while passing in the full path to the `data/` directory. (`/home/you/outl
 - Google Search Cache  
 - [12ft Ladder](https://12ft.io)  
 - [RemoveJS](https://remove-js.com)  
-- [txtify it](https://txtify.it)  
+- [txtify.it](https://txtify.it)  
 - [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
