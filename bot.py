@@ -1,7 +1,7 @@
 '''Telegram bot that primarily attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.1.4'
+__version__ = '2.1.5'
 
 
 import asyncio
@@ -278,9 +278,9 @@ async def twelve_ft(url: str, client: httpx.AsyncClient) -> str | None:
 async def archive_is(url: str, client: httpx.AsyncClient) -> str | None:
     '''Returns the url for this page at archive.is if it exists'''
     try:
-        r = await client.get(f'http://archive.is/timemap/{url}', timeout=2)
+        r = await client.get(f'https://archive.is/timemap/{url}', timeout=2)
         if r.status_code == 200:
-            return f'http://archive.is/newest/{url}'
+            return f'https://archive.is/newest/{url}'
     except httpx.TimeoutException:
         pass
 
