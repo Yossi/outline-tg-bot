@@ -29,7 +29,7 @@ Data stored by the bot (like the list of domains to bypass) lives in `data/bot.p
 ## Maintenance
 Ideally new versions of the bot will be backward compatible with the existing `data/bot.persist` file, so back that up.  
 But just in case, the list of domains to bypass can be exported per group with the `/export` command. This will create a simple text file with the domains listed in it. The filename will be `{chat_id}_urls_backup.txt`.  
-To import this list back into the bot you just upload a text file with the exact fielname to match the chat you're in. You can even forward the message from `/export` back into the chat and not have to download the file.  
+To import this list back into the bot you just upload a text file with the exact filename to match the chat you're in. You can even forward the message from `/export` back into the chat and not have to download the file.  
 
 You can also run `/start` to find the chat_id to use for this filename, and your user_id to use in the list of admins.    
 
