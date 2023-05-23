@@ -7,10 +7,10 @@ This is a telegram bot that attempts to create URL hacks that help people read n
 Add the bot to a group chat and make it an admin so it can see all messages. Or talk to it in pm.
 
 Regular users can use the bot as follows:  
-Post message as usual. The bot will silently detect and remember the most recent link it sees.  
+Post messages as usual. The bot will silently detect and remember the most recent link it sees.  
 When you know that the the most recent link needs to get the bot treatment you say `/include`.  
 Immediately and from now on the bot will attempt to post a list of bypass links for all urls from that domain.  
-You can also send `/include` as a reply to a massage to traget the domain in that message even if it isnt the most resent one anymore. Or you can add domains manually with `/include domain.tld`.  
+You can also send `/include` as a reply to a message to target the domain in that message even if it isn't the most recent one anymore. Or you can add domains manually with `/include domain.tld`.  
 `/list` will show all the domains the bot is set to act on.  
 `/remove domain.tld` to remove one.  
 Reply to a bot message with `/delete` and the bot will delete that message and your `/delete` message too (if it can) to keep things tidy.  
@@ -22,7 +22,7 @@ Additionally, users can request a google translate version of the most recent li
 As a bot admin you have some commands that only you can run:  
 `/data` - Show all the stored data for the chat where you sent the command from.  
 `/data clear <key>` - delete all the data in `<key>`.  
-If the bot throws an exception it will send it to you in a pm.  
+If the bot throws an exception it will send it to you in a private message.  
 The bot will spit out log messages at the info level when messages come in or out. It does not attempt to permanently save these logs anywhere.  
 Data stored by the bot (like the list of domains to bypass) lives in `data/bot.persist`.  
 
