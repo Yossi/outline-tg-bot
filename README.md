@@ -11,6 +11,7 @@ Post messages as usual. The bot will silently detect and remember the most recen
 When you know that the the most recent link needs to get the bot treatment you say `/include`.  
 Immediately and from now on the bot will attempt to post a list of bypass links for all urls from that domain.  
 You can also send `/include` as a reply to a message to target the domain in that message even if it isn't the most recent one anymore. Or you can add domains manually with `/include domain.tld`.  
+Messages with multiple links are treated as though only the first link exists, even if the first link needs no action and a subsequent one does.  
 `/list` will show all the domains the bot is set to act on.  
 `/remove domain.tld` to remove one.  
 Reply to a bot message with `/delete` and the bot will delete that message and your `/delete` message too (if it can) to keep things tidy.  
