@@ -326,21 +326,6 @@ async def nitter(url: str, client: httpx.AsyncClient) -> str | None:
 
 @timer
 @snitch
-async def unnitter(url: str, client: httpx.AsyncClient) -> str | None:
-    '''Convert nitter link back to twitter'''
-    try:
-        r = await client.get(url, timeout=2)
-        r.raise_for_status()
-        if '<a class="icon-bird" title="Open in Twitter" href="https://twitter.com/' in r.text:
-            url_parts = urlsplit(url)
-            url_parts = url_parts._replace(netloc='twitter.com')
-            return urlunsplit(url_parts)
-    except (httpx.TimeoutException, httpx.HTTPStatusError):
-        pass
-
-
-@timer
-@snitch
 async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
     '''Converts certain news sites to their lite versions'''
     domain = get_domain(url)
