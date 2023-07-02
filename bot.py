@@ -203,8 +203,7 @@ async def add_bypasses(url: str, context: ContextTypes.DEFAULT_TYPE) -> str:
         (archive_is, 'archive.is'),
         (ghostarchive, 'Ghost Archive'),
         (txtify_it, 'txtify.it'),
-        (nitter, 'Twiiit'),
-        (unnitter, 'Twitter'),
+        (twitter, 'Twitter Embed'),
         (lite_mode, 'Lite Mode')
     )
 
@@ -316,12 +315,14 @@ async def txtify_it(url: str, client: httpx.AsyncClient) -> str | None:
 
 @timer
 @snitch
-async def nitter(url: str, client: httpx.AsyncClient) -> str | None:
-    '''Converts twitter links to a randomly chosen instance of nitter'''
+async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
+    '''Converts twitter links to twitter embed links that load faster and allow no login viewing'''
     if get_domain(url) == 'twitter.com':
         url_parts = urlsplit(url)
-        url_parts = url_parts._replace(netloc='twiiit.com')
-        return urlunsplit(url_parts)
+        if '/status/' in url_parts.path:
+            tweet_id = url_parts.path.split('/')[-1]
+            url_parts = url_parts._replace(netloc='platform.twitter.com', path='/embed/Tweet.html', query=f'id={tweet_id}')
+            return urlunsplit(url_parts)
 
 
 @timer
