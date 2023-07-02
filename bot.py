@@ -1,7 +1,7 @@
 '''Telegram bot that primarily attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.1.5'
+__version__ = '2.1.6'
 
 
 import asyncio
