@@ -317,7 +317,7 @@ async def txtify_it(url: str, client: httpx.AsyncClient) -> str | None:
 @snitch
 async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
     '''Converts twitter links to twitter embed links that load faster and allow no login viewing'''
-    if get_domain(url) == 'twitter.com':
+    if get_domain(url) == 'twitter.com' or get_domain(url) == 'fxtwitter.com':
         url_parts = urlsplit(url)
         if '/status/' in url_parts.path:
             tweet_id = url_parts.path.split('/')[-1]
