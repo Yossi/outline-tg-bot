@@ -1,4 +1,4 @@
-'''Telegram bot that primarily attempts to perform url hacks to get around paywalls'''
+'''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
 __version__ = '2.1.6'
@@ -42,7 +42,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     trace = "".join(traceback.format_exception(None, context.error, context.error.__traceback__))
     payload = ""
     if update.effective_user:
-        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'  # if it blows up here it's possibly because you've used python < 3.6
+        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'  # If it blows up here it's possibly because you've used python < 3.6
     if update.effective_chat:
         if update.effective_chat.title:
             payload += f' within the chat <i>{html.escape(str(update.effective_chat.title))}</i>'
@@ -57,7 +57,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
 # decorators
 def log(func):
-    '''Decorator that logs who said what to the bot'''
+    '''Decorator to log who said what to the bot'''
     @functools.wraps(func)
     def wrapped(update, context, *args, **kwargs):
         id = update.effective_user.id
@@ -80,7 +80,7 @@ def timer(func):
 
 
 def snitch(func):
-    '''Decorator to catch and handle errors that come up in the invidual bypasses'''
+    '''Decorator to catch and handle errors that come up in the individual bypasses'''
     @functools.wraps(func)
     async def wrapped(*args, **kwargs):
         try:
@@ -92,7 +92,7 @@ def snitch(func):
 
 
 def send_typing_action(func):
-    '''Decorator that sends typing action while processing func command'''
+    '''Decorator to send typing action while processing func command'''
     @functools.wraps(func)
     async def wrapped(update, context, *args, **kwargs):
         await context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
@@ -139,24 +139,24 @@ async def edit(text: str, message_id: int, update: Update, context: ContextTypes
 
 
 async def delete(message_id: int, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''Remove message message_id'''
+    '''Remove message `message_id`'''
     await context.bot.delete_message(chat_id=update.effective_message.chat_id, message_id=message_id)
     logging.info(f'bot deleted message {message_id}')
     response_record_remove(message_id, context)
 
 
 def response_record_add(incoming_id: int, response_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''Track message_ids of what message triggered the bot and what message the bot responded'''
+    '''Track `message_id` of message that triggered the bot and `message_id` of the bot's response'''
     if response_id:
         response_record = context.chat_data.get('response record', {})
         response_record[incoming_id] = response_id
         if len(response_record) > 10:
-            response_record.pop(next(iter(response_record)))  # pop and throw away old one
+            response_record.pop(next(iter(response_record)))  # Pop and throw away old one
         context.chat_data['response record'] = response_record
 
 
 def response_record_remove(message_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''Remove deleted message_id from record'''
+    '''Remove deleted `message_id` from record'''
     response_record = context.chat_data.get('response record', {})
     incoming_id = next((incoming_id for incoming_id, response_id in response_record.items() if response_id == message_id), None)
     response_record.pop(incoming_id, None)  # Remove from the record
@@ -165,7 +165,7 @@ def response_record_remove(message_id: int, context: ContextTypes.DEFAULT_TYPE) 
 
 def get_url(text: str) -> str:
     extractor = URLExtract()
-    extractor.update_when_older(7)  # Gets the latest list of TLDs from iana.org every 7 days
+    extractor.update_when_older(7)  # Gets up-to-date list of TLDs from iana.org every 7 days
     urls = extractor.find_urls(text, check_dns=True)
     if urls:
         return urls[0]
@@ -287,6 +287,7 @@ async def archive_is(url: str, client: httpx.AsyncClient) -> str | None:
 @timer
 @snitch
 async def ghostarchive(url: str, client: httpx.AsyncClient) -> str | None:
+    '''Returns the url for this page at ghostarchive.org if it exists'''
     ghostarchive_url = f'https://ghostarchive.org/search?term={url}'
     try:
         r = await client.get(ghostarchive_url, timeout=2)
@@ -337,7 +338,7 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
 
     elif domain == 'npr.org':
         try:
-            lite_url = urlunsplit(url_parts._replace(netloc='text.npr.org', path=url_parts.path.split('/')[4]))  # this [4] can conceivably wind up out of range
+            lite_url = urlunsplit(url_parts._replace(netloc='text.npr.org', path=url_parts.path.split('/')[4]))  # This [4] can conceivably wind up out of range
         except:
             lite_url = ''
 
@@ -362,12 +363,12 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
 # main thing
 @log
 async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''Check incoming stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
+    '''Check incoming message stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
     url = get_url(update.effective_message.text)
     if url:
         context.chat_data['last url'] = url
 
-    active_dict = context.chat_data.get('active domains', {})  # This sh/could have been a set instead. stuck as dict for legacy reasons
+    active_dict = context.chat_data.get('active domains', {})  # This sh/could have been a set instead. Stuck as dict for legacy reasons
     text = await add_bypasses(url, context=context) if get_domain(url) in active_dict else ''
 
     incoming_id = update.effective_message.message_id
@@ -460,7 +461,7 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @log
 @send_typing_action
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''See and remove domains in/from active_dict if needed'''
+    '''See or remove domains in or from active_dict'''
     active_dict = context.chat_data.get('active domains', {})
     if not context.args and active_dict:
         await list_active_domains(update, context)
