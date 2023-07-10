@@ -81,3 +81,4 @@ Run it while passing in the full path to the `data/` directory. (`/home/you/outl
 - [RemoveJS](https://remove-js.com)  
 - [txtify.it](https://txtify.it)  
 - [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
+- Twitter embed links. Load way faster than the main site.  
