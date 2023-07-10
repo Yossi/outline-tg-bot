@@ -29,6 +29,7 @@ from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's becaus
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 # logging
