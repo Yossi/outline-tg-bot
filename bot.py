@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.1.6'
+__version__ = '2.1.7'
 
 
 import asyncio
@@ -204,6 +204,7 @@ async def add_bypasses(url: str, context: ContextTypes.DEFAULT_TYPE) -> str:
         (ghostarchive, 'Ghost Archive'),
         (txtify_it, 'txtify.it'),
         (twitter, 'Twitter Embed'),
+        (nitter, 'Twiiit'),
         (lite_mode, 'Lite Mode')
     )
 
@@ -324,6 +325,16 @@ async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
             tweet_id = url_parts.path.split('/')[-1]
             url_parts = url_parts._replace(netloc='platform.twitter.com', path='/embed/Tweet.html', query=f'id={tweet_id}')
             return urlunsplit(url_parts)
+
+
+@timer
+@snitch
+async def nitter(url: str, client: httpx.AsyncClient) -> str | None:
+    '''Converts twitter links to a randomly chosen instance of nitter'''
+    if get_domain(url) == 'twitter.com' or get_domain(url) == 'fxtwitter.com':
+        url_parts = urlsplit(url)
+        url_parts = url_parts._replace(netloc='twiiit.com')
+        return urlunsplit(url_parts)
 
 
 @timer
