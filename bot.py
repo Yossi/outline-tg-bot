@@ -187,7 +187,7 @@ def link(url: str, text: str) -> str:
 
 
 @timer
-async def add_bypasses(url: str, context: ContextTypes.DEFAULT_TYPE) -> str:
+async def add_bypasses(url: str) -> str:
     '''Puts together links with various bypass strategies'''
     if not url:
         return ''
@@ -382,7 +382,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         context.chat_data['last url'] = url
 
     active_dict = context.chat_data.get('active domains', {})  # This sh/could have been a set instead. Stuck as dict for legacy reasons
-    text = await add_bypasses(url, context=context) if get_domain(url) in active_dict else ''
+    text = await add_bypasses(url) if get_domain(url) in active_dict else ''
 
     incoming_id = update.effective_message.message_id
     response_id = None
@@ -456,10 +456,10 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             url = get_url(update.effective_message.reply_to_message.text)
             domain = text = get_domain(url)
             if url:
-                text = await add_bypasses(url, context=context)
+                text = await add_bypasses(url)
         else:
             domain = get_domain(context.chat_data.get('last url'))
-            text = await add_bypasses(context.chat_data.get('last url'), context=context)
+            text = await add_bypasses(context.chat_data.get('last url'))
 
     except TypeError:
         domain = text = 'no domain'
