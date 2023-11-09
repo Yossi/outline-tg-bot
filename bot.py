@@ -13,7 +13,7 @@ import sys
 import time
 import traceback
 from io import BytesIO
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit
 
 import httpx
 from telegram import Update
@@ -341,8 +341,7 @@ async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
         url_parts = urlsplit(url)
         if '/status/' in url_parts.path:
             tweet_id = url_parts.path.split('/')[-1]
-            url_parts = url_parts._replace(netloc='platform.twitter.com', path='/embed/Tweet.html', query=f'id={tweet_id}')
-            return urlunsplit(url_parts)
+            return url_parts._replace(netloc='platform.twitter.com', path='/embed/Tweet.html', query=f'id={tweet_id}').geturl()
 
 
 @timer
@@ -350,9 +349,7 @@ async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
 async def nitter(url: str, client: httpx.AsyncClient) -> str | None:
     '''Converts twitter links to a randomly chosen instance of nitter'''
     if get_domain(url) == 'twitter.com' or get_domain(url) == 'fxtwitter.com':
-        url_parts = urlsplit(url)
-        url_parts = url_parts._replace(netloc='twiiit.com')
-        return urlunsplit(url_parts)
+        return urlsplit(url)._replace(netloc='twiiit.com').geturl()
 
 
 @timer
@@ -363,11 +360,11 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
     url_parts = urlsplit(url)
 
     if domain == 'csmonitor.com':
-        lite_url = urlunsplit(url_parts._replace(path='/layout/set/text/' + url_parts.path))
+        lite_url = url_parts._replace(path='/layout/set/text/' + url_parts.path).geturl()
 
     elif domain == 'npr.org':
         try:
-            lite_url = urlunsplit(url_parts._replace(netloc='text.npr.org', path=url_parts.path.split('/')[4]))  # This [4] can conceivably wind up out of range
+            lite_url = url_parts._replace(netloc='text.npr.org', path=url_parts.path.split('/')[4]).geturl()  # This [4] can conceivably wind up out of range
         except:
             lite_url = ''
 
@@ -375,7 +372,7 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
     #     lite_url = 'http://lite.cnn.com/en/article/h_{unidentified_hash}'
 
     elif domain == 'cbc.ca':
-        lite_url = urlunsplit(url_parts._replace(path='/lite/story/' + url_parts.path.split('-')[-1]))
+        lite_url = url_parts._replace(path='/lite/story/' + url_parts.path.split('-')[-1]).geturl()
 
     else:
         lite_url = ''
