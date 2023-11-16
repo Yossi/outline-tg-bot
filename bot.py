@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.2.0'
+__version__ = '2.2.1'
 
 
 import asyncio
@@ -232,6 +232,13 @@ async def wayback(url: str, client: httpx.AsyncClient) -> str | None:
         archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
         if archive_org_url:
             return archive_org_url
+        else:
+            url = urlsplit(url)._replace(query='').geturl() # strip query to maybe canonicalize url
+            r = await client.get(f'http://archive.org/wayback/available?url={url}', timeout=2)
+            archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
+            if archive_org_url:
+                return archive_org_url
+        
     except httpx.TimeoutException:
         pass
 
