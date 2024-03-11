@@ -1,3 +1,3 @@
-python-telegram-bot[http2]==20.8
+python-telegram-bot[http2]==21.0.1
 tldextract==5.1.1
 urlextract==1.9.0
