@@ -201,7 +201,6 @@ async def add_bypasses(url: str) -> str:
         (google_cache, 'Google Cache'),
         (remove_js, 'RemoveJS'),
         (twelve_ft, '12ft.io'),
-        (one_ft, '1ft.io'),
         (archive_is, 'archive.is'),
         (ghostarchive, 'Ghost Archive'),
         (txtify_it, 'txtify.it'),
@@ -278,21 +277,6 @@ async def twelve_ft(url: str, client: httpx.AsyncClient) -> str | None:
         if '12ft has been disabled for this site' not in r.text and \
            'detected unusual activity from your computer network' not in r.text:
             return twelve_ft_url
-    except (httpx.TimeoutException, httpx.HTTPStatusError):
-        pass
-
-
-@timer
-@snitch
-async def one_ft(url: str, client: httpx.AsyncClient) -> str | None:
-    one_ft_url = f'https://1ft.io/{url}'
-    try:
-        r = await client.get(f'https://1ft.io/proxy?q={url}', timeout=2)
-        r.raise_for_status()
-        if '1ft has been disabled for this site' not in r.text and \
-           'detected unusual activity from your computer network' not in r.text and \
-           "Can't honor your request at this time." not in r.text:
-            return one_ft_url
     except (httpx.TimeoutException, httpx.HTTPStatusError):
         pass
 
