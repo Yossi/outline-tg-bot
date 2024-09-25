@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.2.2'
+__version__ = '2.3.0'
 
 
 import asyncio
@@ -199,7 +199,6 @@ async def add_bypasses(url: str) -> str:
     bypass_names = (
         (wayback, 'Wayback Machine'),
         (google_cache, 'Google Cache'),
-        (remove_js, 'RemoveJS'),
         (twelve_ft, '12ft.io'),
         (archive_is, 'archive.is'),
         (ghostarchive, 'Ghost Archive'),
@@ -250,19 +249,6 @@ async def google_cache(url: str, client: httpx.AsyncClient) -> str | None:
         r = await client.get(gcache_url, timeout=2)
         if f'<base href="{url}' in r.text:
             return gcache_url
-    except httpx.TimeoutException:
-        pass
-
-
-@timer
-@snitch
-async def remove_js(url: str, client: httpx.AsyncClient) -> str | None:
-    remove_js_url = f'https://remove-js.com/{url}'
-    try:
-        r = await client.get(remove_js_url, timeout=2)
-        if 'Make sure you enter a valid URL (e.g., http://example.com)' not in r.text and \
-           'detected unusual activity from your computer network' not in r.text:
-            return remove_js_url
     except httpx.TimeoutException:
         pass
 
