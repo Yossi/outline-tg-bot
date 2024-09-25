@@ -78,7 +78,7 @@ Run it while passing in the full path to the `data/` directory. (`/home/you/outl
 - [Ghost Archive](https://ghostarchive.org)  
 - Google Search Cache  
 - [12ft Ladder](https://12ft.io)  
-- --[RemoveJS](https://remove-js.com)-- Dead as of summer 2024 (claims it will come back someday)  
+- ~~[RemoveJS](https://remove-js.com)~~ Dead as of summer 2024 (claims it will come back someday)  
 - [txtify.it](https://txtify.it)  
 - [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
 - Twitter embed links. Load way faster than the main site.  
