@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.3.0'
+__version__ = '2.3.1'
 
 
 import asyncio
@@ -314,7 +314,7 @@ async def txtify_it(url: str, client: httpx.AsyncClient) -> str | None:
 @snitch
 async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
     '''Converts twitter links to twitter embed links that load faster and allow no login viewing'''
-    if get_domain(url) == 'twitter.com' or get_domain(url) == 'fxtwitter.com':
+    if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
         url_parts = urlsplit(url)
         if '/status/' in url_parts.path:
             tweet_id = url_parts.path.split('/')[-1]
@@ -325,7 +325,7 @@ async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
 @snitch
 async def nitter(url: str, client: httpx.AsyncClient) -> str | None:
     '''Converts twitter links to a randomly chosen instance of nitter'''
-    if get_domain(url) == 'twitter.com' or get_domain(url) == 'fxtwitter.com':
+    if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
         return urlsplit(url)._replace(netloc='twiiit.com').geturl()
 
 
