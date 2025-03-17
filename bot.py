@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.3.1'
+__version__ = '2.4.0'
 
 
 import asyncio
@@ -25,6 +25,7 @@ from tldextract import extract
 from urlextract import URLExtract
 
 from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's because you didn't create secrets.py correctly (or at all). Or you didn't pass docker run -v /full/path/to/data/:/home/botuser/data/
+import subprocess
 
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logging.INFO)
@@ -115,6 +116,37 @@ async def chat_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         text = pprint.pformat(context.chat_data)
 
     await say(html.escape(text), update, context)
+
+
+@log
+@send_typing_action
+async def library_versions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    '''Show installed library versions and the latest available versions online'''
+
+    installed_result = subprocess.run(['pip', 'list', '--format=columns'], capture_output=True, text=True)
+    outdated_result = subprocess.run(['pip', 'list', '--outdated', '--format=columns'], capture_output=True, text=True)
+
+    installed_libraries = installed_result.stdout.splitlines()
+    outdated_libraries = outdated_result.stdout.splitlines()
+
+    outdated_dict = {line.split()[0]: line.split()[2] for line in outdated_libraries[2:]}
+
+    response = [installed_libraries[0]]  # Headers
+    for line in installed_libraries[2:]:
+        lib_name = line.split()[0]
+        if lib_name in outdated_dict:
+            response.append(f"{line} (latest: {outdated_dict[lib_name]})")
+        else:
+            response.append(line)
+
+    further_instructions = ''
+    if outdated_dict:
+        further_instructions = "To update all outdated libraries, run:\n<code>pip list --outdated | awk 'NR>2 {print $1}' | xargs -n1 pip install -U</code>"
+
+    text = html.escape("\n".join(response))
+
+    if text:
+        await say(f'<pre>{text}</pre>{further_instructions}', update, context)
 
 
 # internal bot helper stuff
@@ -236,7 +268,7 @@ async def wayback(url: str, client: httpx.AsyncClient) -> str | None:
             archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
             if archive_org_url:
                 return archive_org_url
-        
+
     except httpx.TimeoutException:
         pass
 
@@ -581,6 +613,7 @@ if __name__ == '__main__':
 
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('version', version))
+    application.add_handler(CommandHandler('library_versions', library_versions, filters=filters.User(user_id=LIST_OF_ADMINS)))
     application.add_handler(CommandHandler('translate', translate))
     application.add_handler(CommandHandler('include', include))
     application.add_handler(CommandHandler('remove', remove))
