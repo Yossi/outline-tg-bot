@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.4.0'
+__version__ = '2.4.1'
 
 
 import asyncio
@@ -19,7 +19,7 @@ import httpx
 from telegram import Update
 from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, PicklePersistence, filters
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, MessageReactionHandler, PicklePersistence, filters
 from telegram.helpers import mention_html, create_deep_linked_url
 from tldextract import extract
 from urlextract import URLExtract
@@ -176,6 +176,11 @@ async def delete(message_id: int, update: Update, context: ContextTypes.DEFAULT_
     await context.bot.delete_message(chat_id=update.effective_message.chat_id, message_id=message_id)
     logging.info(f'bot deleted message {message_id}')
     response_record_remove(message_id, context)
+
+
+async def ignore_reactions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    '''Intentionally catch and do nothing with reactions'''
+    pass
 
 
 def response_record_add(incoming_id: int, response_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -621,6 +626,9 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('delete', delete_message))
     application.add_handler(CommandHandler('export', export_urls))
     application.add_handler(CommandHandler('data', chat_data, filters=filters.User(user_id=LIST_OF_ADMINS)))
+
+    application.add_handler(MessageReactionHandler(ignore_reactions))
+
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), incoming))
     application.add_handler(MessageHandler(filters.Document.TEXT, import_urls)) # filters.Caption(['/import']) &
 
