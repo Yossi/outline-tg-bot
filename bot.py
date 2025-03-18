@@ -412,7 +412,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if incoming_id in response_record:  # Ie, edited message has already been responded to previously
         response_id = await edit(text, response_record[incoming_id], update, context)  # Will delete the response if the new text is empty
-    elif text:  # This gets checked inside say() as well, but that creates phanton "bot said: nothing" type log messages
+    elif text:  # This gets checked inside say() as well, but that creates phantom "bot said: nothing" type log messages
         response_id = await say(text, update, context)
 
     if response_id:
