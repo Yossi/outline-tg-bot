@@ -69,6 +69,16 @@ def log(func):
     return wrapped
 
 
+def drop_edits(func):
+    '''Decorator to ignore edited messages'''
+    @functools.wraps(func)
+    def wrapped(update, context, *args, **kwargs):
+        if update.edited_message:
+            return say('', update, context) # Basically a noop to keep async happy
+        return func(update, context, *args, **kwargs)
+    return wrapped
+
+
 def timer(func):
     '''Decorator to measure how long a function ran. Need to set logging level to debug to see results'''
     @functools.wraps(func)
@@ -104,6 +114,8 @@ def send_typing_action(func):
 
 # admin only commands
 @log
+@drop_edits
+@send_typing_action
 async def chat_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''See and optionally clear chat_data'''
     if context.args:
@@ -119,6 +131,7 @@ async def chat_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 @log
+@drop_edits
 @send_typing_action
 async def library_versions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Show installed library versions and the latest available versions online'''
@@ -420,6 +433,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # user accessible commands
 @log
+@drop_edits
 @send_typing_action
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     url = create_deep_linked_url(context.bot.username, 'yes', group=True)
@@ -431,6 +445,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 @log
+@drop_edits
 @send_typing_action
 async def version(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     url = 'https://raw.githubusercontent.com/Yossi/outline-tg-bot/master/VERSION'
@@ -442,6 +457,7 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 @log
+@drop_edits
 @send_typing_action
 async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Run the page at url through google translate'''
@@ -465,6 +481,7 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 @log
+@drop_edits
 @send_typing_action
 async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Add domains to the set that gets acted on'''
@@ -493,6 +510,7 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 @log
+@drop_edits
 @send_typing_action
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''See or remove domains in or from active_dict'''
@@ -510,6 +528,7 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 @log
+@drop_edits
 @send_typing_action
 async def list_active_domains(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
@@ -522,6 +541,7 @@ async def list_active_domains(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 @log
+@drop_edits
 async def delete_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''If someone replies to a bot message with /delete, get rid of the message'''
     if not update.effective_message.reply_to_message:
@@ -542,6 +562,7 @@ async def delete_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 @log
+@drop_edits
 async def export_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Make settings avaliable as a CSV file'''
     await context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.UPLOAD_DOCUMENT)
@@ -552,6 +573,7 @@ async def export_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 @log
+@drop_edits
 async def import_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Import settings previously exported with /export'''
     chat_id = update.effective_message.chat_id
