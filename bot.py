@@ -102,7 +102,7 @@ def send_typing_action(func):
     return wrapped
 
 
-# admin
+# admin only commands
 @log
 async def chat_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''See and optionally clear chat_data'''
@@ -543,7 +543,7 @@ async def delete_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await delete(target_id, update, context)
             await delete(reply_id, update, context)  # Clean up the /delete command. Only works if the bot has permission to delete others' messages
         except BadRequest:
-            logging.info('message probably too old to delete')
+            logging.info('Message probably too old to delete')
 
 
 @log
