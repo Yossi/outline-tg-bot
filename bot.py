@@ -152,8 +152,8 @@ async def library_versions(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 # internal bot helper stuff
 async def say(text: str, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int | None:
     '''Send text to channel'''
-    logging.info(f'bot said:\n{text}')
     if text:
+        logging.info(f'bot said:\n{text}')
         sent_message = await context.bot.send_message(chat_id=update.effective_message.chat_id, text=text, parse_mode=ParseMode.HTML, disable_web_page_preview=True, disable_notification=True)
         return sent_message.message_id
 
@@ -417,8 +417,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if incoming_id in response_record:  # Ie, edited message has already been responded to previously
         response_id = await edit(text, response_record[incoming_id], update, context)  # Will delete the response if the new text is empty
-    elif text:  # This gets checked inside say() as well, but that creates phantom "bot said: nothing" type log messages
-        response_id = await say(text, update, context)
+    response_id = await say(text, update, context)
 
     if response_id:
         response_record_add(incoming_id, response_id, context)
