@@ -408,8 +408,8 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if url:
         context.chat_data['last url'] = url
 
-    active_dict = context.chat_data.get('active domains', {})  # This sh/could have been a set instead. Stuck as dict for legacy reasons
-    text = await add_bypasses(url) if get_domain(url) in active_dict else ''
+    active_set = context.chat_data.get('active domains', set())
+    text = await add_bypasses(url) if get_domain(url) in active_set else ''
 
     incoming_id = update.effective_message.message_id
     response_id = None
@@ -473,7 +473,7 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @send_typing_action
 async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Add domains to the set that gets acted on'''
-    active_dict = context.chat_data.get('active domains', {})
+    active_set = context.chat_data.get('active domains', set())
     try:
         if context.args:
             domain = get_domain(context.args[0])
@@ -491,8 +491,8 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         domain = text = 'no domain'
 
     if domain != 'no domain':
-        active_dict[domain] = None  # Really wish this was a set instead of dict
-        context.chat_data['active domains'] = active_dict
+        active_set.add(domain)
+        context.chat_data['active domains'] = active_set
 
     await say(text, update, context)
 
@@ -501,15 +501,16 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @send_typing_action
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''See or remove domains in or from active_dict'''
-    active_dict = context.chat_data.get('active domains', {})
-    if not context.args and active_dict:
+    active_set = context.chat_data.get('active domains', set())
+    if not context.args and active_set:
         await list_active_domains(update, context)
     else:
+        domain = ' '.join(context.args)
         try:
-            del active_dict[' '.join(context.args)]
-            text = f"Removed {' '.join(context.args)}"
+            active_set.remove(domain)
+            text = f"Removed {domain}"
         except KeyError:
-            text = f"Failed to remove {' '.join(context.args)}\nAlready gone? Check your spelling?"
+            text = f"Failed to remove {domain}\nAlready gone? Check your spelling?"
         await say(text, update, context)
 
 
@@ -517,8 +518,8 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @send_typing_action
 async def list_active_domains(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
-    active_dict = context.chat_data.get('active domains', {})
-    text = '</code>\n<code>'.join((f'{url}' for url in active_dict.keys()))
+    active_set = context.chat_data.get('active domains', set())
+    text = '</code>\n<code>'.join((f'{url}' for url in active_set))
     if not text:
         text = 'no domains yet'
     text = f"<code>{text}</code>"
@@ -550,7 +551,7 @@ async def export_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     '''Make settings avaliable as a CSV file'''
     await context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.UPLOAD_DOCUMENT)
     chat_id = update.effective_message.chat_id
-    bio = BytesIO('\n'.join(context.chat_data['active domains'].keys()).encode('utf8'))
+    bio = BytesIO('\n'.join(context.chat_data['active domains']).encode('utf8'))
     bio.name = f'{chat_id}_urls_backup.txt'
     await context.bot.send_document(chat_id=chat_id, document=bio)
 
@@ -569,7 +570,7 @@ async def import_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     await file.download_to_memory(bio)
     bio.seek(0)
 
-    active_dict = context.chat_data.get('active domains', {})
+    active_set = context.chat_data.get('active domains', set())
 
     line_ending = '\n' if ',' not in bio.read().decode() else ',\n'
     bio.seek(0)
@@ -577,10 +578,10 @@ async def import_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     added_domains = []
     for domain in bio.read().decode().split(line_ending):
         if domain == get_domain(domain):
-            active_dict[domain] = None  # Really wish this was a set instead of dict
+            active_set.add(domain)
             added_domains.append(domain)
 
-    context.chat_data['active domains'] = active_dict
+    context.chat_data['active domains'] = active_set
 
     text = '\n'.join(added_domains)
     if text:
@@ -609,6 +610,20 @@ async def post_init(application: Application) -> None:
     )
 
     await application.bot.set_my_short_description(f'Paywall bypass finder bot {__version__}')
+
+    await migrate(application)
+
+
+async def migrate(application: Application) -> None:
+    '''Migrate chat_data to latest format'''
+    chat_data = await application.persistence.get_chat_data()
+    for chat, data in chat_data.items():
+        if not isinstance(data.get('active domains', set()), set):
+            logging.info(f'Migrating chat {chat} to new active domains format')
+            data['active domains'] = set(data['active domains'].keys()) # strong assumption that the old format was a dict
+
+        context = CallbackContext(application, chat)
+        context.chat_data.update(data)
 
 
 if __name__ == '__main__':
