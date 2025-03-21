@@ -432,7 +432,8 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if incoming_id in response_record:  # Ie, edited message has already been responded to previously
         response_id = await edit(text, response_record[incoming_id], update, context)  # Will delete the response if the new text is empty
-    response_id = await say(text, update, context)
+    else:
+        response_id = await say(text, update, context)
 
     if response_id:
         response_record_add(incoming_id, response_id, context)
