@@ -65,6 +65,13 @@ def log(func):
         id = update.effective_user.id
         name = update.effective_user.username
         logging.info(f'{name} ({id}) said:\n{update.effective_message.text}')
+        logging.info(f'Function {func.__name__}() called')
+
+        # # Detailed debug info
+        # logging.info(f'Full update data: {update}')
+        # logging.info(f'update.message: {bool(update.message)}')
+        # logging.info(f'update.edited_message: {bool(update.edited_message)}')
+
         return func(update, context, *args, **kwargs)
     return wrapped
 
