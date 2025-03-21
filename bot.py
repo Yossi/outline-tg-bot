@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.4.1'
+__version__ = '2.5.0'
 
 
 import asyncio
@@ -445,7 +445,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     url = get_url(incoming_text)
     if url:
-        context.chat_data['last url'] = url
+        context.chat_data['last url'] = incoming_id, url
 
     active_set = context.chat_data.get('active domains', set())
     text = await add_bypasses(url) if get_domain(url) in active_set else ''
@@ -492,7 +492,7 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.effective_message.reply_to_message:
         url = get_url(update.effective_message.reply_to_message.text)
     else:
-        url = context.chat_data.get('last url')
+        url = context.chat_data.get('last url')[1]
 
     if not url:
         return
@@ -513,19 +513,25 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @send_typing_action
 async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Add domains to the set that gets acted on'''
+    incoming_text = ''
     active_set = context.chat_data.get('active domains', set())
     try:
-        if context.args:
+        if context.args:  # Directly add domain
             domain = get_domain(context.args[0])
             text = f'{context.args[0]} added'
-        elif update.effective_message.reply_to_message:
-            url = get_url(update.effective_message.reply_to_message.text)
+
+        elif update.effective_message.reply_to_message:  # Add domain by replying to a message
+            incoming_text = update.effective_message.reply_to_message.text
+            incoming_id = update.effective_message.reply_to_message.message_id
+            url = get_url(incoming_text)
             domain = text = get_domain(url)
             if url:
                 text = await add_bypasses(url)
-        else:
-            domain = get_domain(context.chat_data.get('last url'))
-            text = await add_bypasses(context.chat_data.get('last url'))
+
+        else:  # Add domain from last url
+            incoming_id, url = context.chat_data.get('last url')
+            domain = get_domain(url)
+            text = await add_bypasses(url)
 
     except TypeError:
         domain = text = 'no domain'
@@ -534,7 +540,9 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         active_set.add(domain)
         context.chat_data['active domains'] = active_set
 
-    await say(text, update, context)
+    response_id = await say(text, update, context)
+    if response_id and incoming_text:
+        response_record_add(incoming_id, response_id, incoming_text, context)
 
 
 @log
@@ -666,6 +674,10 @@ async def migrate(application: Application) -> None:
         if not isinstance(data.get('active domains', set()), set):
             logging.info(f'Migrating chat {chat} to new active domains format')
             data['active domains'] = set(data['active domains'].keys()) # strong assumption that the old format was a dict
+
+        if not isinstance(data.get('last url', (0, '')), tuple):
+            logging.info(f'Migrating chat {chat} to new last url format')
+            data['last url'] = (0, data['last url'])
 
         context = CallbackContext(application, chat)
         context.chat_data.update(data)
