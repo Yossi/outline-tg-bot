@@ -198,22 +198,32 @@ async def delete(message_id: int, update: Update, context: ContextTypes.DEFAULT_
     response_record_remove(message_id, context)
 
 
-def response_record_add(incoming_id: int, response_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
+def response_record_add(incoming_id: int, response_id: int, incoming_text: str, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Track `message_id` of message that triggered the bot and `message_id` of the bot's response'''
     if response_id:
         response_record = context.chat_data.get('response record', {})
         response_record[incoming_id] = response_id
         if len(response_record) > 10:
             response_record.pop(next(iter(response_record)))  # Pop and throw away old one
+
+        response_text_record = context.chat_data.get('response text record', {})
+        response_text_record[incoming_id] = incoming_text
+        if len(response_text_record) > 10:
+            response_text_record.pop(next(iter(response_text_record)))
+
         context.chat_data['response record'] = response_record
+        context.chat_data['response text record'] = response_text_record
 
 
 def response_record_remove(message_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Remove deleted `message_id` from record'''
     response_record = context.chat_data.get('response record', {})
+    response_text_record = context.chat_data.get('response text record', {})
     incoming_id = next((incoming_id for incoming_id, response_id in response_record.items() if response_id == message_id), None)
     response_record.pop(incoming_id, None)  # Remove from the record
+    response_text_record.pop(incoming_id, None)
     context.chat_data['response record'] = response_record
+    context.chat_data['response text record'] = response_text_record
 
 
 def get_url(text: str) -> str:
@@ -419,16 +429,26 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
 @log
 async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Check incoming message stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
-    url = get_url(update.effective_message.text)
+    response_record = context.chat_data.get('response record', {})
+    response_text_record = context.chat_data.get('response text record', {})
+    incoming_id = update.effective_message.message_id
+    incoming_text = update.effective_message.text
+
+    old_text = response_text_record.get(incoming_id, '')
+    if incoming_text == old_text:
+        logging.info('GOT YOU! GTFO here with your broken reactions')
+        return  # It's actually just a reaction on a message over one hour old. Bail out.
+
+    if update.edited_message and incoming_id not in response_record:
+        logging.info("Ignoring edited message because it's too old")
+        return
+
+    url = get_url(incoming_text)
     if url:
         context.chat_data['last url'] = url
 
     active_set = context.chat_data.get('active domains', set())
     text = await add_bypasses(url) if get_domain(url) in active_set else ''
-
-    incoming_id = update.effective_message.message_id
-    response_id = None
-    response_record = context.chat_data.get('response record', {})
 
     if incoming_id in response_record:  # Ie, edited message has already been responded to previously
         response_id = await edit(text, response_record[incoming_id], update, context)  # Will delete the response if the new text is empty
@@ -436,7 +456,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         response_id = await say(text, update, context)
 
     if response_id:
-        response_record_add(incoming_id, response_id, context)
+        response_record_add(incoming_id, response_id, incoming_text, context)
 
 
 # user accessible commands
