@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.5.1'
+__version__ = '2.5.2'
 
 
 import asyncio
@@ -353,9 +353,9 @@ async def ghostarchive(url: str, client: httpx.AsyncClient) -> str | None:
         r = await client.get(ghostarchive_url, timeout=2)
         if 'No archives for that site.' in r.text:
             return
-        start = r.text.find('/archive/')
+        start = r.text.find('<a href="/archive/')
         end = r.text.find('">', start)
-        path = r.text[start:end]
+        path = r.text[start+len('<a href="'):end]
         if path:
             return f'https://ghostarchive.org{path}'
     except httpx.TimeoutException:
