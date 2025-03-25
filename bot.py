@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.5.0'
+__version__ = '2.5.1'
 
 
 import asyncio
@@ -42,16 +42,18 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     trace = "".join(traceback.format_exception(None, context.error, context.error.__traceback__))
-    payload = ""
+    user_info = ""
     if update.effective_user:
-        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'  # If it blows up here it's possibly because you've used python < 3.6
+        user_info += f' when {mention_html(update.effective_user.id, update.effective_user.first_name)}'  # If it blows up here it's possibly because you've used python < 3.6
     if update.effective_chat:
         if update.effective_chat.title:
-            payload += f' within the chat <i>{html.escape(str(update.effective_chat.title))}</i>'
+            user_info += f' in the chat <i>{html.escape(str(update.effective_chat.title))}</i>'
         if update.effective_chat.username:
-            payload += f' (@{update.effective_chat.username})'
+            user_info += f' (@{update.effective_chat.username})'
 
-    message = f"Hey.\n The error <code>{sys.exc_info()[0].__name__}: {html.escape(str(context.error))}</code> happened{payload}. The full traceback:\n\n<code>{html.escape(trace)}</code>"
+    text = update.effective_message.text if update.effective_message else None
+
+    message = f"Hey.\n The error <code>{sys.exc_info()[0].__name__}: {html.escape(str(context.error))}</code> happened{user_info} said <code>{text}</code>.\n\n<pre><code class='language-python'>{html.escape(trace)}</code></pre>"
 
     for admin_id in LIST_OF_ADMINS:
         await context.bot.send_message(chat_id=admin_id, text=message, parse_mode=ParseMode.HTML)
