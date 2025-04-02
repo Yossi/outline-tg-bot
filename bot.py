@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.5.2.lol'
+__version__ = '2.5.2'
 
 
 import asyncio
@@ -270,8 +270,7 @@ async def add_bypasses(url: str) -> str:
         (txtify_it, 'txtify.it'),
         (twitter, 'Twitter Embed'),
         (nitter, 'Twiiit'),
-        (lite_mode, 'Lite Mode'),
-        (rick_roll, 'Experimental')
+        (lite_mode, 'Lite Mode')
     )
 
     async with httpx.AsyncClient(http2=True) as client:
@@ -287,20 +286,6 @@ async def add_bypasses(url: str) -> str:
 
 
 # bypasses
-@timer
-@snitch
-async def rick_roll(url: str, client: httpx.AsyncClient) -> str | None:
-    '''Rickrolls people on April 1st'''
-    def is_april_fools():
-        utc_now = datetime.now(timezone.utc)
-        start_time_utc = datetime(2025, 4, 1, 0, 0, tzinfo=timezone.utc) - timedelta(hours=-4) # EDT
-        end_time_utc = datetime(2025, 4, 2, 0, 0, tzinfo=timezone.utc) - timedelta(hours=-7)   # PDT
-        return start_time_utc <= utc_now <= end_time_utc
-
-    if is_april_fools():
-        return 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-
-
 @timer
 @snitch
 async def wayback(url: str, client: httpx.AsyncClient) -> str | None:
