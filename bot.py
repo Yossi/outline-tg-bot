@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.5.2'
+__version__ = '2.5.3'
 
 
 import asyncio
@@ -336,9 +336,10 @@ async def twelve_ft(url: str, client: httpx.AsyncClient) -> str | None:
 @snitch
 async def archive_is(url: str, client: httpx.AsyncClient) -> str | None:
     '''Returns the url for this page at archive.is if it exists'''
+    # list of TLDs they have: .is .ph .md .li .vn .fo .today
     try:
         headers = {'user-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/114.0'}
-        r = await client.get(f'https://archive.is/timemap/{url}', timeout=2, headers=headers)
+        r = await client.get(f'https://archive.today/timemap/{url}', timeout=2, headers=headers)
         if r.status_code == 200:
             return f'https://archive.is/newest/{url}'
     except httpx.TimeoutException:
