@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.5.3'
+__version__ = '2.6.0'
 
 
 import asyncio
@@ -518,31 +518,40 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Add domains to the set that gets acted on'''
     incoming_text = ''
-    active_set = context.chat_data.get('active domains', set())
-    try:
-        if context.args:  # Directly add domain
-            domain = get_domain(context.args[0])
-            text = f'{context.args[0]} added'
 
-        elif update.effective_message.reply_to_message:  # Add domain by replying to a message
-            incoming_text = update.effective_message.reply_to_message.text
-            incoming_id = update.effective_message.reply_to_message.message_id
-            url = get_url(incoming_text)
-            domain = text = get_domain(url)
-            if url:
-                text = await add_bypasses(url)
+    def include_domain(domain: str) -> str:
+        if domain == 'no domain':
+            return 'No domain found to include'
 
-        else:  # Add domain from last url
-            incoming_id, url = context.chat_data.get('last url')
-            domain = get_domain(url)
-            text = await add_bypasses(url)
-
-    except TypeError:
-        domain = text = 'no domain'
-
-    if domain != 'no domain':
+        active_set = context.chat_data.get('active domains', set())
         active_set.add(domain)
         context.chat_data['active domains'] = active_set
+        return f"Added {domain}"
+
+
+    if update.effective_message.reply_to_message:  # Add domain by replying to a message
+        incoming_text = update.effective_message.reply_to_message.text
+        incoming_id = update.effective_message.reply_to_message.message_id
+        url = get_url(incoming_text)
+        domain = get_domain(url)  # Returns string 'no domain' if none found
+        text = include_domain(domain)
+        if url:
+            text = await add_bypasses(url)
+
+    elif context.args:  # Directly add domain
+        responses = []
+        for arg in context.args:
+            domain = get_domain(arg)
+            responses.append(include_domain(domain))
+
+        text = '\n'.join(responses)
+
+    else:  # Add domain from last url
+        incoming_id, url = context.chat_data.get('last url')
+        domain = get_domain(url)
+        text = include_domain(domain)
+        if url:
+            text = await add_bypasses(url)
 
     response_id = await say(text, update, context)
     if response_id and incoming_text:
