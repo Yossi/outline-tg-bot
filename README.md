@@ -13,7 +13,7 @@ Immediately and from now on the bot will attempt to post a list of bypass links 
 You can also send `/include` as a reply to a message to target the domain in that message even if it isn't the most recent one anymore. Or you can add domains manually with `/include domain.tld`.  
 Messages with multiple links are treated as though only the first link exists, even if the first link needs no action and a subsequent one does.  
 * `/list` will show all the domains the bot is set to act on.  
-* `/remove domain.tld` to remove domain.  
+* Reply to a message with `/remove` or say `/remove domain.tld` to remove a domain.  
 * Reply to a bot message with `/delete` and the bot will delete that message and your `/delete` message too (if it can) to keep things tidy.  
 Only works on bot messages less than 48 hours old (telegram restriction) and less than 10 bot messages ago (bot restriction).  
 

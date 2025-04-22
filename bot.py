@@ -553,18 +553,36 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @drop_edits
 @send_typing_action
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''See or remove domains in or from active_dict'''
-    active_set = context.chat_data.get('active domains', set())
-    if not context.args and active_set:
-        await list_active_domains(update, context)
-    else:
-        domain = ' '.join(context.args)
+    '''Remove domains from the active set'''
+
+    def remove_domain(domain: str) -> str:
+        if domain == 'no domain':
+            return 'No domain found to remove'
         try:
+            active_set = context.chat_data.get('active domains', set())
             active_set.remove(domain)
-            text = f"Removed {domain}"
+            return f"Removed {domain}"
         except KeyError:
-            text = f"Failed to remove {domain}\nAlready gone? Check your spelling?"
-        await say(text, update, context)
+            return f"Failed to remove {domain}\nAlready gone? Check your spelling?"
+
+
+    if update.effective_message.reply_to_message:
+        incoming_text = update.effective_message.reply_to_message.text
+        url = get_url(incoming_text)
+        domain = get_domain(url)  # Returns string 'no domain' if none found
+        text = remove_domain(domain)
+
+    elif context.args:
+        responses = []
+        for domain in context.args:
+            responses.append(remove_domain(domain))
+
+        text = '\n'.join(responses)
+
+    else:
+        text = 'Usage syntax: /remove <domain.tld> or reply to a message with /remove'
+
+    await say(html.escape(text), update, context)
 
 
 @log
