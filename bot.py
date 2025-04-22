@@ -573,7 +573,7 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def list_active_domains(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
     active_set = context.chat_data.get('active domains', set())
-    text = '</code>\n<code>'.join((f'{url}' for url in active_set))
+    text = '</code>\n<code>'.join((f'{url}' for url in sorted(active_set)))
     if not text:
         text = 'no domains yet'
     text = f"<code>{text}</code>"
