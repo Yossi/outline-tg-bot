@@ -84,7 +84,7 @@ def drop_edits(func):
     @functools.wraps(func)
     def wrapped(update, context, *args, **kwargs):
         if update.edited_message:
-            return say('', update, context) # Basically a noop to keep async happy
+            return say('', update, context)  # Basically a noop to keep async happy
         return func(update, context, *args, **kwargs)
     return wrapped
 
@@ -296,7 +296,7 @@ async def wayback(url: str, client: httpx.AsyncClient) -> str | None:
         if archive_org_url:
             return archive_org_url
         else:
-            url = urlsplit(url)._replace(query='').geturl() # strip query to maybe canonicalize url
+            url = urlsplit(url)._replace(query='').geturl()  # Strip query to maybe canonicalize url
             r = await client.get(f'http://archive.org/wayback/available?url={url}', timeout=2)
             archive_org_url = r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
             if archive_org_url:
@@ -336,7 +336,7 @@ async def twelve_ft(url: str, client: httpx.AsyncClient) -> str | None:
 @snitch
 async def archive_is(url: str, client: httpx.AsyncClient) -> str | None:
     '''Returns the url for this page at archive.is if it exists'''
-    # list of TLDs they have: .is .ph .md .li .vn .fo .today
+    # List of TLDs they have: .is .ph .md .li .vn .fo .today
     try:
         headers = {'user-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/114.0'}
         r = await client.get(f'https://archive.today/timemap/{url}', timeout=2, headers=headers)
@@ -704,7 +704,7 @@ async def migrate(application: Application) -> None:
     for chat, data in chat_data.items():
         if not isinstance(data.get('active domains', set()), set):
             logging.info(f'Migrating chat {chat} to new active domains format')
-            data['active domains'] = set(data['active domains'].keys()) # strong assumption that the old format was a dict
+            data['active domains'] = set(data['active domains'].keys())  # Strong assumption that the old format was a dict
 
         if not isinstance(data.get('last url', (0, '')), tuple):
             logging.info(f'Migrating chat {chat} to new last url format')
