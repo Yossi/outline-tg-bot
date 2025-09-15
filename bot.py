@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.6.1'
+__version__ = '2.6.2'
 
 
 import asyncio
@@ -264,7 +264,6 @@ async def add_bypasses(url: str) -> str:
     bypass_names = (
         (wayback, 'Wayback Machine'),
         (google_cache, 'Google Cache'),
-        (twelve_ft, '12ft.io'),
         (archive_is, 'archive.is'),
         (ghostarchive, 'Ghost Archive'),
         (txtify_it, 'txtify.it'),
@@ -321,6 +320,8 @@ async def google_cache(url: str, client: httpx.AsyncClient) -> str | None:
 @timer
 @snitch
 async def twelve_ft(url: str, client: httpx.AsyncClient) -> str | None:
+    # disabled code but left around incase 13ft.io becomes a thing
+    # https://github.com/wasi-master/13ft
     twelve_ft_url = f'https://12ft.io/{url}'
     try:
         r = await client.get(f'https://12ft.io/api/proxy?ref=&q={url}', timeout=2)
