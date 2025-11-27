@@ -386,7 +386,7 @@ async def txtify_it(url: str, client: httpx.AsyncClient) -> str | None:
 @timer
 @snitch
 async def removepaywall(url: str, client: httpx.AsyncClient) -> str | None:
-    '''Run url through removepaywall.com if url returns something other than 404'''
+    '''Run url through removepaywall.com if original url actually returns anything'''
     removepaywall_url = f'https://www.removepaywall.com/search?url={url}'
     try:
         r = await client.get(url, timeout=2)
