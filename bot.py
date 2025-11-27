@@ -392,7 +392,7 @@ async def removepaywall(url: str, client: httpx.AsyncClient) -> str | None:
         r = await client.get(url, timeout=2)
         r.raise_for_status()
         return removepaywall_url
-    except (httpx.TimeoutException, httpx.HTTPStatusError):
+    except httpx.HTTPStatusError:
         pass
 
 
