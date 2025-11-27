@@ -82,5 +82,6 @@ Run it while passing in the full path to the `data/` directory. (`/home/you/outl
 - ~~[12ft Ladder](https://12ft.io)~~ Dead as of July 14, 2025  
 - ~~[RemoveJS](https://remove-js.com)~~ Dead as of summer 2024 (claims it will come back someday)  
 - [txtify.it](https://txtify.it)  
+- [Remove Paywall](https://removepaywall.com)  
 - [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
 - Twitter embed links. Loads way faster than the main site.  
