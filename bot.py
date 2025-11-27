@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.8.0'
+__version__ = '2.8.1'
 
 
 import asyncio
@@ -375,13 +375,15 @@ async def ghostarchive(url: str, client: httpx.AsyncClient) -> str | None:
 @timer
 @snitch
 async def txtify_it(url: str, client: httpx.AsyncClient) -> str | None:
+    '''Return txtify.it url if original url actually returns anything'''
     txtify_it_url = f'https://txtify.it/{url}'
     try:
-        r = await client.get(txtify_it_url, timeout=2)
-        if r.content.strip():
-            return txtify_it_url
-    except httpx.TimeoutException:
-            pass
+        r = await client.get(url, timeout=2)
+        r.raise_for_status()
+        return txtify_it_url
+    except httpx.HTTPStatusError:
+        pass
+
 
 @timer
 @snitch
