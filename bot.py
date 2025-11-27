@@ -14,7 +14,6 @@ import time
 import traceback
 from io import BytesIO
 from urllib.parse import urlsplit
-from datetime import datetime, timezone, timedelta
 
 import httpx
 from telegram import Update
