@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.9.0'
+__version__ = '2.10.0'
 
 
 import asyncio
@@ -266,6 +266,7 @@ async def add_bypasses(url: str) -> str:
         (archive_is, 'archive.is'),
         (ghostarchive, 'Ghost Archive'),
         (removepaywall, 'Remove Paywall'),
+        (printfriendly, 'Print Friendly'),
         (twitter, 'Twitter Embed'),
         (nitter, 'Twiiit'),
         (lite_mode, 'Lite Mode')
@@ -312,7 +313,6 @@ async def google_cache(url: str, client: httpx.AsyncClient) -> str | None:
             return gcache_url
     except httpx.TimeoutException:
         pass
-
 
 @timer
 @snitch
@@ -380,6 +380,19 @@ async def removepaywall(url: str, client: httpx.AsyncClient) -> str | None:
         r = await client.get(url, timeout=2)
         r.raise_for_status()
         return removepaywall_url
+    except httpx.HTTPStatusError:
+        pass
+
+
+@timer
+@snitch
+async def printfriendly(url: str, client: httpx.AsyncClient) -> str | None:
+    '''Run url through printfriendly.com if original url actually returns anything'''
+    printfriendly_url = f'https://www.printfriendly.com/print?url={url}'
+    try:
+        r = await client.get(url, timeout=2)
+        r.raise_for_status()
+        return printfriendly_url
     except httpx.HTTPStatusError:
         pass
 
