@@ -432,8 +432,8 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
         except:
             lite_url = ''
 
-    # elif domain == 'cnn.com':
-    #     lite_url = 'http://lite.cnn.com/en/article/h_{unidentified_hash}'
+    elif domain == 'cnn.com':
+        lite_url = url_parts._replace(netloc='lite.cnn.com').geturl()
 
     elif domain == 'cbc.ca':
         lite_url = url_parts._replace(path='/lite/story/' + url_parts.path.split('-')[-1]).geturl()
