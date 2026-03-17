@@ -428,7 +428,7 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
 
     elif domain == 'npr.org':
         try:
-            lite_url = url_parts._replace(netloc='text.npr.org', path=url_parts.path.split('/')[4]).geturl()  # This [4] can conceivably wind up out of range
+            lite_url = url_parts._replace(netloc='text.npr.org').geturl()
         except:
             lite_url = ''
 
