@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.10.0'
+__version__ = '2.11.0'
 
 
 import asyncio
@@ -15,7 +15,7 @@ import traceback
 from io import BytesIO
 from urllib.parse import urlsplit
 
-import httpx
+from curl_cffi import requests
 from telegram import Update
 from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest
@@ -272,7 +272,7 @@ async def add_bypasses(url: str) -> str:
         (lite_mode, 'Lite Mode')
     )
 
-    async with httpx.AsyncClient(http2=True) as client:
+    async with requests.AsyncSession(impersonate="chrome") as client:
         bypasses, bp_texts = zip(*bypass_names)
         tasks = [bypass(url, client) for bypass in bypasses]
         bp_urls = await asyncio.gather(*tasks)
@@ -287,13 +287,13 @@ async def add_bypasses(url: str) -> str:
 # bypasses
 @timer
 @snitch
-async def wayback(url: str, client: httpx.AsyncClient) -> str | None:
+async def wayback(url: str, client: requests.AsyncSession) -> str | None:
     '''Returns the url of the latest snapshot if avalable on wayback machine'''
     async def check_archive_org(url: str) -> str | None:
         try:
             r = await client.get(f'http://archive.org/wayback/available?url={url}', timeout=2)
             return r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
-        except httpx.TimeoutException:
+        except requests.RequestsError:
             pass
 
     archive_org_url = await check_archive_org(url)
@@ -305,18 +305,18 @@ async def wayback(url: str, client: httpx.AsyncClient) -> str | None:
 
 @timer
 @snitch
-async def google_cache(url: str, client: httpx.AsyncClient) -> str | None:
+async def google_cache(url: str, client: requests.AsyncSession) -> str | None:
     gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
     try:
         r = await client.get(gcache_url, timeout=2)
         if f'<base href="{url}' in r.text:
             return gcache_url
-    except httpx.TimeoutException:
+    except requests.RequestsError:
         pass
 
 @timer
 @snitch
-async def twelve_ft(url: str, client: httpx.AsyncClient) -> str | None:
+async def twelve_ft(url: str, client: requests.AsyncSession) -> str | None:
     # disabled code but left around incase 13ft.io becomes a thing
     # https://github.com/wasi-master/13ft
     twelve_ft_url = f'https://12ft.io/{url}'
@@ -326,13 +326,13 @@ async def twelve_ft(url: str, client: httpx.AsyncClient) -> str | None:
         if '12ft has been disabled for this site' not in r.text and \
            'detected unusual activity from your computer network' not in r.text:
             return twelve_ft_url
-    except (httpx.TimeoutException, httpx.HTTPStatusError):
+    except requests.RequestsError:
         pass
 
 
 @timer
 @snitch
-async def archive_is(url: str, client: httpx.AsyncClient) -> str | None:
+async def archive_is(url: str, client: requests.AsyncSession) -> str | None:
     '''Returns the url for this page at archive.is if it exists'''
     # List of TLDs they have: .is .ph .md .li .vn .fo .today
     headers = {'user-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/114.0'}
@@ -341,7 +341,7 @@ async def archive_is(url: str, client: httpx.AsyncClient) -> str | None:
             r = await client.get(f'https://archive.is/timemap/{url}', timeout=2, headers=headers)
             if r.status_code == 200:
                 return f'https://archive.is/newest/{url}'
-        except httpx.TimeoutException:
+        except requests.RequestsError:
             pass
 
     archive_is_url = await check_archive_is(url)
@@ -353,7 +353,7 @@ async def archive_is(url: str, client: httpx.AsyncClient) -> str | None:
 
 @timer
 @snitch
-async def ghostarchive(url: str, client: httpx.AsyncClient) -> str | None:
+async def ghostarchive(url: str, client: requests.AsyncSession) -> str | None:
     '''Returns the url for this page at ghostarchive.org if it exists'''
     ghostarchive_url = f'https://ghostarchive.org/search?term={url}'
     try:
@@ -367,39 +367,39 @@ async def ghostarchive(url: str, client: httpx.AsyncClient) -> str | None:
         path = r.text[start+len('<a href="'):end]
         if path:
             return f'https://ghostarchive.org{path}'
-    except (httpx.TimeoutException, httpx.HTTPStatusError):
+    except requests.RequestsError:
         pass
 
 
 @timer
 @snitch
-async def removepaywall(url: str, client: httpx.AsyncClient) -> str | None:
+async def removepaywall(url: str, client: requests.AsyncSession) -> str | None:
     '''Run url through removepaywall.com if original url actually returns anything'''
     removepaywall_url = f'https://www.removepaywall.com/search?url={url}'
     try:
         r = await client.get(url, timeout=2)
         r.raise_for_status()
         return removepaywall_url
-    except httpx.HTTPStatusError:
+    except requests.RequestsError:
         pass
 
 
 @timer
 @snitch
-async def printfriendly(url: str, client: httpx.AsyncClient) -> str | None:
+async def printfriendly(url: str, client: requests.AsyncSession) -> str | None:
     '''Run url through printfriendly.com if original url actually returns anything'''
     printfriendly_url = f'https://www.printfriendly.com/print?url={url}'
     try:
         r = await client.get(url, timeout=2)
         r.raise_for_status()
         return printfriendly_url
-    except httpx.HTTPStatusError:
+    except requests.RequestsError:
         pass
 
 
 @timer
 @snitch
-async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
+async def twitter(url: str, client: requests.AsyncSession) -> str | None:
     '''Converts twitter links to twitter embed links that load faster and allow logged out viewing'''
     if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
         url_parts = urlsplit(url)
@@ -410,7 +410,7 @@ async def twitter(url: str, client: httpx.AsyncClient) -> str | None:
 
 @timer
 @snitch
-async def nitter(url: str, client: httpx.AsyncClient) -> str | None:
+async def nitter(url: str, client: requests.AsyncSession) -> str | None:
     '''Converts twitter links to a randomly chosen instance of nitter'''
     if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
         return urlsplit(url)._replace(netloc='twiiit.com').geturl()
@@ -418,7 +418,7 @@ async def nitter(url: str, client: httpx.AsyncClient) -> str | None:
 
 @timer
 @snitch
-async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
+async def lite_mode(url: str, client: requests.AsyncSession) -> str | None:
     '''Converts certain news sites to their lite versions'''
     domain = get_domain(url)
     url_parts = urlsplit(url)
@@ -427,10 +427,7 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
         lite_url = url_parts._replace(path='/layout/set/text/' + url_parts.path).geturl()
 
     elif domain == 'npr.org':
-        try:
-            lite_url = url_parts._replace(netloc='text.npr.org').geturl()
-        except:
-            lite_url = ''
+        lite_url = url_parts._replace(netloc='text.npr.org').geturl()
 
     elif domain == 'cnn.com':
         lite_url = url_parts._replace(netloc='lite.cnn.com').geturl()
@@ -446,7 +443,7 @@ async def lite_mode(url: str, client: httpx.AsyncClient) -> str | None:
             r = await client.get(lite_url, timeout=2)
             if r.status_code == 200:
                 return lite_url
-        except httpx.TimeoutException:
+        except requests.RequestsError:
             pass
 
 
@@ -502,7 +499,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @send_typing_action
 async def version(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     url = 'https://raw.githubusercontent.com/Yossi/outline-tg-bot/master/VERSION'
-    r = httpx.get(url)
+    r = requests.get(url)
     if r.text.strip() != __version__:
         await say(f'Running: {__version__}\nLatest: <a href="https://github.com/Yossi/outline-tg-bot">{r.text}</a>', update, context)
     else:
