@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.11.0'
+__version__ = '2.12.0'
 
 
 import asyncio
@@ -267,6 +267,7 @@ async def add_bypasses(url: str) -> str:
         (ghostarchive, 'Ghost Archive'),
         (removepaywall, 'Remove Paywall'),
         (printfriendly, 'Print Friendly'),
+        (megalodon, 'megalodon.jp'),
         (twitter, 'Twitter Embed'),
         (nitter, 'Twiiit'),
         (lite_mode, 'Lite Mode')
@@ -393,6 +394,22 @@ async def printfriendly(url: str, client: requests.AsyncSession) -> str | None:
         r = await client.get(url, timeout=2)
         r.raise_for_status()
         return printfriendly_url
+    except requests.RequestsError:
+        pass
+
+
+@timer
+@snitch
+async def megalodon(url: str, client: requests.AsyncSession) -> str | None:
+    '''Returns the url of this page if available on megalodon.jp'''
+    try:
+        r = await client.get(f'https://megalodon.jp/pc/main?url={url}', timeout=2)
+        r.raise_for_status()
+        start = r.text.find('<a href="https://megalodon.jp/20')
+        if start == -1: return
+        end = r.text.find('" target="_top"', start)
+        megalodon_url = r.text[start+len('<a href="'):end]
+        return megalodon_url
     except requests.RequestsError:
         pass
 
