@@ -288,7 +288,7 @@ async def add_bypasses(url: str) -> str:
 @timer
 @snitch
 async def wayback(url: str, client: requests.AsyncSession) -> str | None:
-    '''Returns the url of the latest snapshot if avalable on wayback machine'''
+    '''Returns the url of the latest snapshot if available on wayback machine'''
     async def check_archive_org(url: str) -> str | None:
         try:
             r = await client.get(f'http://archive.org/wayback/available?url={url}', timeout=2)
@@ -317,7 +317,7 @@ async def google_cache(url: str, client: requests.AsyncSession) -> str | None:
 @timer
 @snitch
 async def twelve_ft(url: str, client: requests.AsyncSession) -> str | None:
-    # disabled code but left around incase 13ft.io becomes a thing
+    # disabled code but left around in case 13ft.io becomes a thing
     # https://github.com/wasi-master/13ft
     twelve_ft_url = f'https://12ft.io/{url}'
     try:
