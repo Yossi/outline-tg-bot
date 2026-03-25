@@ -80,7 +80,7 @@ Run it while passing in the full path to the `data/` directory. (`/home/you/outl
 - [megalodon.jp](https://megalodon.jp)  
 - [Remove Paywall](https://removepaywall.com)  
 - [Print Friendly](https://printfriendly.com)  
-- Lite Mode. Select sites that also have a lightweight version (csmonitor, npr, cnn, cbc).
+- Lite Mode. Select sites that also have a lightweight version ([csmonitor](https://csmonitor.com/text_edition), [npr](https://text.npr.org), [cnn](https://lite.cnn.com), [cbc](https://cbc.ca/lite)).
 - Google Search Cache.  
 - Twitter embed links. Loads way faster than the main site.  
 - [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
