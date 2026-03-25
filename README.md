@@ -74,15 +74,17 @@ Run it while passing in the full path to the `data/` directory. (`/home/you/outl
 `docker run -v /full/path/to/data/:/home/outlinebot/data/ --cap-drop=ALL outlinebot`  
 
 ## List of bypasses
-- ~~[Outline](https://outline.com)~~ Dead as of March 2022  
 - [Wayback Machine](https://archive.org)
 - [archive.is](https://archive.is)  
 - [Ghost Archive](https://ghostarchive.org)  
-- Google Search Cache  
-- ~~[12ft Ladder](https://12ft.io)~~ Dead as of July 14, 2025  
-- ~~[RemoveJS](https://remove-js.com)~~ Dead as of summer 2024 (claims it will come back someday)  
-- ~~[txtify.it](https://txtify.it)~~ Paid service as of January 2026  
-- [Remove Paywall](https://removepaywall.com)  
 - [megalodon.jp](https://megalodon.jp)  
-- [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
+- [Remove Paywall](https://removepaywall.com)  
+- [Print Friendly](https://printfriendly.com)  
+- Lite Mode. Select sites that also have a lightweight version (csmonitor, npr, cnn, cbc).
+- Google Search Cache.  
 - Twitter embed links. Loads way faster than the main site.  
+- [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
+- ~~[Outline](https://outline.com)~~ Dead as of March 2022.  
+- ~~[RemoveJS](https://remove-js.com)~~ Dead as of summer 2024 (claims it will come back someday).  
+- ~~[12ft Ladder](https://12ft.io)~~ Dead as of July 14, 2025.  
+- ~~[txtify.it](https://txtify.it)~~ Paid service as of January 2026.  
