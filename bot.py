@@ -153,7 +153,7 @@ async def library_versions(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     outdated_dict = {line.split()[0]: line.split()[2] for line in outdated_libraries[2:]}
 
-    response = [installed_libraries[0]]  # Headers
+    response = [f'Python {sys.version}', '', installed_libraries[0]]  # Headers
     for line in installed_libraries[2:]:
         lib_name = line.split()[0]
         if lib_name in outdated_dict:
