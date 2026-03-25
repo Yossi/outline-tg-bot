@@ -106,7 +106,7 @@ def snitch(func):
     async def wrapped(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
-        except:
+        except Exception:
             trace = "".join(traceback.format_tb(sys.exc_info()[2]))
             logging.warning(trace)
     return wrapped
@@ -649,7 +649,7 @@ async def delete_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     me = await application.bot.get_me()
-    bot_user_id = me['id']
+    bot_user_id = me.id
 
     reply_to_user_id = update.effective_message.reply_to_message.from_user.id
     if bot_user_id == reply_to_user_id:
@@ -734,8 +734,7 @@ async def post_init(application: Application) -> None:
 
 async def migrate(application: Application) -> None:
     '''Migrate chat_data to latest format'''
-    chat_data = await application.persistence.get_chat_data()
-    for chat, data in chat_data.items():
+    for chat, data in application.chat_data.items():
         if not isinstance(data.get('active domains', set()), set):
             logging.info(f'Migrating chat {chat} to new active domains format')
             data['active domains'] = set(data['active domains'].keys())  # Strong assumption that the old format was a dict
