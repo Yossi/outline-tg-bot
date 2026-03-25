@@ -393,7 +393,7 @@ async def lite_mode(url: str, client: requests.AsyncSession) -> str | None:
     url_parts = urlsplit(url)
 
     if domain == 'csmonitor.com':
-        lite_url = url_parts._replace(path='/layout/set/text/' + url_parts.path).geturl()
+        lite_url = url_parts._replace(path='/text_edition/' + url_parts.path).geturl()
 
     elif domain == 'npr.org':
         lite_url = url_parts._replace(netloc='text.npr.org').geturl()
