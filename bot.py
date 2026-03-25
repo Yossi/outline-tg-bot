@@ -218,7 +218,7 @@ def response_record_add(incoming_id: int, response_id: int, incoming_text: str, 
 
 
 def response_record_remove(message_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''Remove deleted `message_id` from record'''
+    '''Remove deleted `message_id` from record. Does nothing if `message_id` is not in record'''
     response_record = context.chat_data.get('response record', {})
     response_text_record = context.chat_data.get('response text record', {})
     incoming_id = next((incoming_id for incoming_id, response_id in response_record.items() if response_id == message_id), None)
@@ -633,7 +633,7 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @drop_edits
 @send_typing_action
 async def list_active_domains(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''List only. /list used to be an alias for /remove, but that's just asking for trouble'''
+    '''Display current active domain set'''
     active_set = context.chat_data.get('active domains', set())
     text = '</code>\n<code>'.join((f'{url}' for url in sorted(active_set)))
     if not text:
@@ -666,7 +666,7 @@ async def delete_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 @log
 @drop_edits
 async def export_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    '''Make settings avaliable as a CSV file'''
+    '''Make settings available as a text file'''
     await context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.UPLOAD_DOCUMENT)
     chat_id = update.effective_message.chat_id
     bio = BytesIO('\n'.join(context.chat_data['active domains']).encode('utf8'))
