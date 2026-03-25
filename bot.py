@@ -261,15 +261,15 @@ async def add_bypasses(url: str) -> str:
 
     bypass_names = (
         (wayback, 'Wayback Machine'),
-        (google_cache, 'Google Cache'),
         (archive_is, 'archive.is'),
         (ghostarchive, 'Ghost Archive'),
+        (megalodon, 'megalodon.jp'),
         (removepaywall, 'Remove Paywall'),
         (printfriendly, 'Print Friendly'),
-        (megalodon, 'megalodon.jp'),
+        (lite_mode, 'Lite Mode'),
+        (google_cache, 'Google Cache'),
         (twitter, 'Twitter Embed'),
-        (nitter, 'Twiiit'),
-        (lite_mode, 'Lite Mode')
+        (nitter, 'Twiiit')
     )
 
     async with requests.AsyncSession(impersonate="chrome") as client:
@@ -301,33 +301,6 @@ async def wayback(url: str, client: requests.AsyncSession) -> str | None:
         url = urlsplit(url)._replace(query='').geturl()  # Strip query to maybe canonicalize url
         archive_org_url = await check_archive_org(url)
     return archive_org_url
-
-
-@timer
-@snitch
-async def google_cache(url: str, client: requests.AsyncSession) -> str | None:
-    gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
-    try:
-        r = await client.get(gcache_url, timeout=2)
-        if f'<base href="{url}' in r.text:
-            return gcache_url
-    except requests.RequestsError:
-        pass
-
-@timer
-@snitch
-async def twelve_ft(url: str, client: requests.AsyncSession) -> str | None:
-    # disabled code but left around in case 13ft.io becomes a thing
-    # https://github.com/wasi-master/13ft
-    twelve_ft_url = f'https://12ft.io/{url}'
-    try:
-        r = await client.get(f'https://12ft.io/api/proxy?ref=&q={url}', timeout=2)
-        r.raise_for_status()
-        if '12ft has been disabled for this site' not in r.text and \
-           'detected unusual activity from your computer network' not in r.text:
-            return twelve_ft_url
-    except requests.RequestsError:
-        pass
 
 
 @timer
@@ -372,6 +345,22 @@ async def ghostarchive(url: str, client: requests.AsyncSession) -> str | None:
 
 @timer
 @snitch
+async def megalodon(url: str, client: requests.AsyncSession) -> str | None:
+    '''Returns the url of this page if available on megalodon.jp'''
+    try:
+        r = await client.get(f'https://megalodon.jp/pc/main?url={url}', timeout=2)
+        r.raise_for_status()
+        start = r.text.find('<a href="https://megalodon.jp/20')
+        if start == -1: return
+        end = r.text.find('" target="_top"', start)
+        megalodon_url = r.text[start+len('<a href="'):end]
+        return megalodon_url
+    except requests.RequestsError:
+        pass
+
+
+@timer
+@snitch
 async def removepaywall(url: str, client: requests.AsyncSession) -> str | None:
     '''Run url through removepaywall.com if original url actually returns anything'''
     removepaywall_url = f'https://www.removepaywall.com/search?url={url}'
@@ -394,41 +383,6 @@ async def printfriendly(url: str, client: requests.AsyncSession) -> str | None:
         return printfriendly_url
     except requests.RequestsError:
         pass
-
-
-@timer
-@snitch
-async def megalodon(url: str, client: requests.AsyncSession) -> str | None:
-    '''Returns the url of this page if available on megalodon.jp'''
-    try:
-        r = await client.get(f'https://megalodon.jp/pc/main?url={url}', timeout=2)
-        r.raise_for_status()
-        start = r.text.find('<a href="https://megalodon.jp/20')
-        if start == -1: return
-        end = r.text.find('" target="_top"', start)
-        megalodon_url = r.text[start+len('<a href="'):end]
-        return megalodon_url
-    except requests.RequestsError:
-        pass
-
-
-@timer
-@snitch
-async def twitter(url: str, client: requests.AsyncSession) -> str | None:
-    '''Converts twitter links to twitter embed links that load faster and allow logged out viewing'''
-    if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
-        url_parts = urlsplit(url)
-        if '/status/' in url_parts.path:
-            tweet_id = url_parts.path.split('/')[-1]
-            return url_parts._replace(netloc='platform.twitter.com', path='/embed/Tweet.html', query=f'id={tweet_id}').geturl()
-
-
-@timer
-@snitch
-async def nitter(url: str, client: requests.AsyncSession) -> str | None:
-    '''Converts twitter links to a randomly chosen instance of nitter'''
-    if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
-        return urlsplit(url)._replace(netloc='twiiit.com').geturl()
 
 
 @timer
@@ -460,6 +414,53 @@ async def lite_mode(url: str, client: requests.AsyncSession) -> str | None:
                 return lite_url
         except requests.RequestsError:
             pass
+
+
+@timer
+@snitch
+async def google_cache(url: str, client: requests.AsyncSession) -> str | None:
+    gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
+    try:
+        r = await client.get(gcache_url, timeout=2)
+        if f'<base href="{url}' in r.text:
+            return gcache_url
+    except requests.RequestsError:
+        pass
+
+
+@timer
+@snitch
+async def twitter(url: str, client: requests.AsyncSession) -> str | None:
+    '''Converts twitter links to twitter embed links that load faster and allow logged out viewing'''
+    if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
+        url_parts = urlsplit(url)
+        if '/status/' in url_parts.path:
+            tweet_id = url_parts.path.split('/')[-1]
+            return url_parts._replace(netloc='platform.twitter.com', path='/embed/Tweet.html', query=f'id={tweet_id}').geturl()
+
+
+@timer
+@snitch
+async def nitter(url: str, client: requests.AsyncSession) -> str | None:
+    '''Converts twitter links to a randomly chosen instance of nitter'''
+    if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
+        return urlsplit(url)._replace(netloc='twiiit.com').geturl()
+
+
+@timer
+@snitch
+async def twelve_ft(url: str, client: requests.AsyncSession) -> str | None:
+    # disabled code but left around in case 13ft.io becomes a thing
+    # https://github.com/wasi-master/13ft
+    twelve_ft_url = f'https://12ft.io/{url}'
+    try:
+        r = await client.get(f'https://12ft.io/api/proxy?ref=&q={url}', timeout=2)
+        r.raise_for_status()
+        if '12ft has been disabled for this site' not in r.text and \
+           'detected unusual activity from your computer network' not in r.text:
+            return twelve_ft_url
+    except requests.RequestsError:
+        pass
 
 
 # main thing
