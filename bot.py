@@ -231,8 +231,7 @@ def response_record_remove(message_id: int, context: ContextTypes.DEFAULT_TYPE) 
 def get_url(text: str) -> str:
     extractor = URLExtract()
     extractor.update_when_older(7)  # Gets up-to-date list of TLDs from iana.org every 7 days
-    urls = extractor.find_urls(text, check_dns=True)
-    if urls:
+    if text and (urls := extractor.find_urls(text, check_dns=True)):
         return urls[0]
     else:
         return ''
