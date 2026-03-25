@@ -12,6 +12,7 @@ import pprint
 import sys
 import time
 import traceback
+import subprocess
 from io import BytesIO
 from urllib.parse import urlsplit
 
@@ -25,7 +26,6 @@ from tldextract import extract
 from urlextract import URLExtract
 
 from data.secrets import LIST_OF_ADMINS, TOKEN  # If it crashed here it's because you didn't create secrets.py correctly (or at all). Or you didn't pass docker run -v /full/path/to/data/:/home/botuser/data/
-import subprocess
 
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s %(message)s', level=logging.INFO)
