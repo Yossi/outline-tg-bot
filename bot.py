@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.12.2'
+__version__ = '2.12.3'
 
 
 import asyncio
@@ -63,7 +63,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 def log(func):
     '''Decorator to log who said what to the bot'''
     @functools.wraps(func)
-    def wrapped(update, context, *args, **kwargs):
+    async def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
         name = update.effective_user.username
         logging.info(f'{name} ({user_id}) said:\n{update.effective_message.text}')
@@ -74,17 +74,17 @@ def log(func):
         # logging.info(f'update.message: {bool(update.message)}')
         # logging.info(f'update.edited_message: {bool(update.edited_message)}')
 
-        return func(update, context, *args, **kwargs)
+        return await func(update, context, *args, **kwargs)
     return wrapped
 
 
 def drop_edits(func):
     '''Decorator to ignore edited messages'''
     @functools.wraps(func)
-    def wrapped(update, context, *args, **kwargs):
+    async def wrapped(update, context, *args, **kwargs):
         if update.edited_message:
-            return say('', update, context)  # Basically a noop to keep async happy
-        return func(update, context, *args, **kwargs)
+            return  # Do nothing
+        return await func(update, context, *args, **kwargs)
     return wrapped
 
 
