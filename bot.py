@@ -64,9 +64,9 @@ def log(func):
     '''Decorator to log who said what to the bot'''
     @functools.wraps(func)
     def wrapped(update, context, *args, **kwargs):
-        id = update.effective_user.id
+        user_id = update.effective_user.id
         name = update.effective_user.username
-        logging.info(f'{name} ({id}) said:\n{update.effective_message.text}')
+        logging.info(f'{name} ({user_id}) said:\n{update.effective_message.text}')
         logging.info(f'Function {func.__name__}() called')
 
         # # Detailed debug info
