@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.12.0'
+__version__ = '2.12.1'
 
 
 import asyncio
@@ -530,7 +530,7 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.effective_message.reply_to_message:
         url = get_url(update.effective_message.reply_to_message.text)
     else:
-        url = context.chat_data.get('last url')[1]
+        url = context.chat_data.get('last url', (0, ''))[1]
 
     if not url:
         return
@@ -581,7 +581,7 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         text = '\n'.join(responses)
 
     else:  # Add domain from last url
-        incoming_id, url = context.chat_data.get('last url')
+        incoming_id, url = context.chat_data.get('last url', (0, ''))
         domain = get_domain(url)
         text = include_domain(domain)
         if url:
@@ -668,7 +668,7 @@ async def export_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     '''Make settings available as a text file'''
     await context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.UPLOAD_DOCUMENT)
     chat_id = update.effective_message.chat_id
-    bio = BytesIO('\n'.join(context.chat_data['active domains']).encode('utf8'))
+    bio = BytesIO('\n'.join(context.chat_data.get('active domains', set())).encode('utf8'))
     bio.name = f'{chat_id}_urls_backup.txt'
     await context.bot.send_document(chat_id=chat_id, document=bio)
 
@@ -741,7 +741,7 @@ async def migrate(application: Application) -> None:
 
         if not isinstance(data.get('last url', (0, '')), tuple):
             logging.info(f'Migrating chat {chat} to new last url format')
-            data['last url'] = (0, data['last url'])
+            data['last url'] = (0, data.get('last url', ''))  # Strong assumption that the old format was just a string
 
         context = CallbackContext(application, chat)
         context.chat_data.update(data)
