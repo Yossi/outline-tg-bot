@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.12.1'
+__version__ = '2.12.2'
 
 
 import asyncio
@@ -335,10 +335,9 @@ async def twelve_ft(url: str, client: requests.AsyncSession) -> str | None:
 async def archive_is(url: str, client: requests.AsyncSession) -> str | None:
     '''Returns the url for this page at archive.is if it exists'''
     # List of TLDs they have: .is .ph .md .li .vn .fo .today
-    headers = {'user-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/114.0'}
     async def check_archive_is(url: str) -> str | None:
         try:
-            r = await client.get(f'https://archive.is/timemap/{url}', timeout=2, headers=headers)
+            r = await client.get(f'https://archive.is/timemap/{url}', timeout=2)
             if r.status_code == 200:
                 return f'https://archive.is/newest/{url}'
         except requests.RequestsError:
