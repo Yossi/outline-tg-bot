@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.14.0'
+__version__ = '2.14.0.lol'
 
 
 import asyncio
@@ -15,6 +15,7 @@ import traceback
 import subprocess
 from io import BytesIO
 from urllib.parse import urlsplit
+from datetime import datetime, timezone, timedelta
 
 import httpcloak as requests
 from telegram import Update
@@ -265,6 +266,7 @@ async def add_bypasses(url: str) -> str:
     text = []
 
     bypass_names = (
+        (rick_roll, 'Experimental'),
         (wayback, 'Wayback Machine'),
         (archive_is, 'archive.is'),
         (ghostarchive, 'Ghost Archive'),
@@ -289,6 +291,20 @@ async def add_bypasses(url: str) -> str:
 
 
 # bypasses
+@timer
+@snitch
+async def rick_roll(url: str, client: requests.Session) -> str | None:
+    '''Rickrolls people on April 1st'''
+    def is_april_fools():
+        utc_now = datetime.now(timezone.utc)
+        start_time_utc = datetime(2025, 4, 1, 0, 0, tzinfo=timezone.utc) - timedelta(hours=-4) # EDT
+        end_time_utc = datetime(2025, 4, 2, 0, 0, tzinfo=timezone.utc) - timedelta(hours=-7)   # PDT
+        return start_time_utc <= utc_now <= end_time_utc
+
+    if is_april_fools():
+        return 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+
+
 @timer
 @snitch
 async def wayback(url: str, client: requests.Session) -> str | None:
