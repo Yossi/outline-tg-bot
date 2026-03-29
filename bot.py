@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.12.3'
+__version__ = '2.13.0'
 
 
 import asyncio
@@ -16,7 +16,7 @@ import subprocess
 from io import BytesIO
 from urllib.parse import urlsplit
 
-from curl_cffi import requests
+import httpcloak as requests
 from telegram import Update
 from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest
@@ -257,6 +257,11 @@ async def add_bypasses(url: str) -> str:
     if not url.startswith('http'):
         url = f'http://{url}'
 
+    try:
+        client_ctx = requests.Session.load("data/session.json", timeout=2)
+    except Exception:
+        client_ctx = requests.Session(preset="chrome-latest", timeout=2)
+
     text = []
 
     bypass_names = (
@@ -272,14 +277,14 @@ async def add_bypasses(url: str) -> str:
         (nitter, 'Twiiit')
     )
 
-    async with requests.AsyncSession(impersonate="chrome") as client:
-        bypasses, bp_texts = zip(*bypass_names)
+    bypasses, bp_texts = zip(*bypass_names)
+    with client_ctx as client:
         tasks = [bypass(url, client) for bypass in bypasses]
         bp_urls = await asyncio.gather(*tasks)
 
-        for bp_url, bp_text in zip(bp_urls, bp_texts):
-            if bp_url:
-                text.append(link(bp_url, bp_text))
+    for bp_url, bp_text in zip(bp_urls, bp_texts):
+        if bp_url:
+            text.append(link(bp_url, bp_text))
 
     return '\n\n'.join(text)
 
@@ -287,13 +292,13 @@ async def add_bypasses(url: str) -> str:
 # bypasses
 @timer
 @snitch
-async def wayback(url: str, client: requests.AsyncSession) -> str | None:
+async def wayback(url: str, client: requests.Session) -> str | None:
     '''Returns the url of the latest snapshot if available on wayback machine'''
     async def check_archive_org(url: str) -> str | None:
         try:
-            r = await client.get(f'http://archive.org/wayback/available?url={url}', timeout=2)
+            r = await client.get_async(f'http://archive.org/wayback/available?url={url}')
             return r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
-        except requests.RequestsError:
+        except (requests.ConnectTimeout, requests.ReadTimeout):
             pass
 
     archive_org_url = await check_archive_org(url)
@@ -305,15 +310,15 @@ async def wayback(url: str, client: requests.AsyncSession) -> str | None:
 
 @timer
 @snitch
-async def archive_is(url: str, client: requests.AsyncSession) -> str | None:
+async def archive_is(url: str, client: requests.Session) -> str | None:
     '''Returns the url for this page at archive.is if it exists'''
     # List of TLDs they have: .is .ph .md .li .vn .fo .today
     async def check_archive_is(url: str) -> str | None:
         try:
-            r = await client.get(f'https://archive.is/timemap/{url}', timeout=2)
+            r = await client.get_async(f'https://archive.is/timemap/{url}')
             if r.status_code == 200:
                 return f'https://archive.is/newest/{url}'
-        except requests.RequestsError:
+        except (requests.ConnectTimeout, requests.ReadTimeout):
             pass
 
     archive_is_url = await check_archive_is(url)
@@ -325,11 +330,11 @@ async def archive_is(url: str, client: requests.AsyncSession) -> str | None:
 
 @timer
 @snitch
-async def ghostarchive(url: str, client: requests.AsyncSession) -> str | None:
+async def ghostarchive(url: str, client: requests.Session) -> str | None:
     '''Returns the url for this page at ghostarchive.org if it exists'''
     ghostarchive_url = f'https://ghostarchive.org/search?term={url}'
     try:
-        r = await client.get(ghostarchive_url, timeout=2)
+        r = await client.get_async(ghostarchive_url)
         r.raise_for_status()
         if 'No archives for that site.' in r.text:
             return
@@ -339,55 +344,55 @@ async def ghostarchive(url: str, client: requests.AsyncSession) -> str | None:
         path = r.text[start+len('<a href="'):end]
         if path:
             return f'https://ghostarchive.org{path}'
-    except requests.RequestsError:
+    except (requests.ConnectTimeout, requests.ReadTimeout, requests.HTTPError):
         pass
 
 
 @timer
 @snitch
-async def megalodon(url: str, client: requests.AsyncSession) -> str | None:
+async def megalodon(url: str, client: requests.Session) -> str | None:
     '''Returns the url of this page if available on megalodon.jp'''
     try:
-        r = await client.get(f'https://megalodon.jp/pc/main?url={url}', timeout=2)
+        r = await client.get_async(f'https://megalodon.jp/pc/main?url={url}')
         r.raise_for_status()
         start = r.text.find('<a href="https://megalodon.jp/20')
         if start == -1: return
         end = r.text.find('" target="_top"', start)
         megalodon_url = r.text[start+len('<a href="'):end]
         return megalodon_url
-    except requests.RequestsError:
+    except (requests.ConnectTimeout, requests.ReadTimeout, requests.HTTPError):
         pass
 
 
 @timer
 @snitch
-async def removepaywall(url: str, client: requests.AsyncSession) -> str | None:
+async def removepaywall(url: str, client: requests.Session) -> str | None:
     '''Run url through removepaywall.com if original url actually returns anything'''
     removepaywall_url = f'https://www.removepaywall.com/search?url={url}'
     try:
-        r = await client.get(url, timeout=2)
+        r = await client.get_async(url)
         r.raise_for_status()
         return removepaywall_url
-    except requests.RequestsError:
+    except (requests.ConnectTimeout, requests.ReadTimeout, requests.HTTPError):
         pass
 
 
 @timer
 @snitch
-async def printfriendly(url: str, client: requests.AsyncSession) -> str | None:
+async def printfriendly(url: str, client: requests.Session) -> str | None:
     '''Run url through printfriendly.com if original url actually returns anything'''
     printfriendly_url = f'https://www.printfriendly.com/print?url={url}'
     try:
-        r = await client.get(url, timeout=2)
+        r = await client.get_async(url)
         r.raise_for_status()
         return printfriendly_url
-    except requests.RequestsError:
+    except (requests.ConnectTimeout, requests.ReadTimeout, requests.HTTPError):
         pass
 
 
 @timer
 @snitch
-async def lite_mode(url: str, client: requests.AsyncSession) -> str | None:
+async def lite_mode(url: str, client: requests.Session) -> str | None:
     '''Converts certain news sites to their lite versions'''
     domain = get_domain(url)
     url_parts = urlsplit(url)
@@ -409,28 +414,28 @@ async def lite_mode(url: str, client: requests.AsyncSession) -> str | None:
 
     if lite_url:
         try:
-            r = await client.get(lite_url, timeout=2)
+            r = await client.get_async(lite_url)
             if r.status_code == 200:
                 return lite_url
-        except requests.RequestsError:
+        except (requests.ConnectTimeout, requests.ReadTimeout):
             pass
 
 
 @timer
 @snitch
-async def google_cache(url: str, client: requests.AsyncSession) -> str | None:
+async def google_cache(url: str, client: requests.Session) -> str | None:
     gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
     try:
-        r = await client.get(gcache_url, timeout=2)
+        r = await client.get_async(gcache_url)
         if f'<base href="{url}' in r.text:
             return gcache_url
-    except requests.RequestsError:
+    except (requests.ConnectTimeout, requests.ReadTimeout):
         pass
 
 
 @timer
 @snitch
-async def twitter(url: str, client: requests.AsyncSession) -> str | None:
+async def twitter(url: str, client: requests.Session) -> str | None:
     '''Converts twitter links to twitter embed links that load faster and allow logged out viewing'''
     if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
         url_parts = urlsplit(url)
@@ -441,7 +446,7 @@ async def twitter(url: str, client: requests.AsyncSession) -> str | None:
 
 @timer
 @snitch
-async def nitter(url: str, client: requests.AsyncSession) -> str | None:
+async def nitter(url: str, client: requests.Session) -> str | None:
     '''Converts twitter links to a randomly chosen instance of nitter'''
     if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
         return urlsplit(url)._replace(netloc='twiiit.com').geturl()
@@ -449,17 +454,17 @@ async def nitter(url: str, client: requests.AsyncSession) -> str | None:
 
 @timer
 @snitch
-async def twelve_ft(url: str, client: requests.AsyncSession) -> str | None:
+async def twelve_ft(url: str, client: requests.Session) -> str | None:
     # disabled code but left around in case 13ft.io becomes a thing
     # https://github.com/wasi-master/13ft
     twelve_ft_url = f'https://12ft.io/{url}'
     try:
-        r = await client.get(f'https://12ft.io/api/proxy?ref=&q={url}', timeout=2)
+        r = await client.get_async(f'https://12ft.io/api/proxy?ref=&q={url}')
         r.raise_for_status()
         if '12ft has been disabled for this site' not in r.text and \
            'detected unusual activity from your computer network' not in r.text:
             return twelve_ft_url
-    except requests.RequestsError:
+    except (requests.ConnectTimeout, requests.ReadTimeout, requests.HTTPError):
         pass
 
 
@@ -515,7 +520,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @send_typing_action
 async def version(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     url = 'https://raw.githubusercontent.com/Yossi/outline-tg-bot/master/VERSION'
-    r = requests.get(url)
+    with requests.Session(preset="chrome-latest") as client:
+        r = await client.get_async(url)
     if r.text.strip() != __version__:
         await say(f'Running: {__version__}\nLatest: <a href="https://github.com/Yossi/outline-tg-bot">{r.text}</a>', update, context)
     else:
@@ -709,7 +715,7 @@ async def import_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 # bot setup
 async def post_init(application: Application) -> None:
     '''Stuff that runs once on startup'''
-    logging.info(f'outline bot started as @{application.bot.username}')
+    logging.info(f'bypass bot started as @{application.bot.username}')
 
     await application.bot.set_my_commands([
         ('include', 'Add recent url to active list. Other domain may be passed instead.'),
@@ -729,6 +735,16 @@ async def post_init(application: Application) -> None:
 
     await application.bot.set_my_short_description(f'Paywall bypass finder bot {__version__}')
 
+    with requests.Session(preset="chrome-latest", timeout=5) as session:
+        try:
+            # Shop around for some sweet sweet TLS tickets
+            session.get("https://www.google.com/")
+            session.get("https://www.cloudflare.com/")
+            session.save("data/session.json")
+            logging.info("Session warmed and saved to data/session.json")
+        except Exception as e:
+            logging.warning(f"Could not warm up session: {e}")
+
     await migrate(application)
 
 
@@ -747,9 +763,24 @@ async def migrate(application: Application) -> None:
         context.chat_data.update(data)
 
 
+async def refresh_session_task(context: ContextTypes.DEFAULT_TYPE) -> None:
+    '''Run by job_queue periodically to keep session fresh'''
+    logging.info("Refreshing session identity...")
+    with requests.Session(preset="chrome-latest", timeout=5) as session:
+        try:
+            session.get("https://www.google.com/")
+            session.get("https://www.cloudflare.com/")
+            session.save("data/session.json")
+        except Exception as e:
+            logging.error(f"Refresh failed: {e}")
+
+
 if __name__ == '__main__':
     persistence = PicklePersistence(filepath='data/bot.persist', on_flush=False)
     application = Application.builder().token(TOKEN).persistence(persistence).post_init(post_init).build()
+
+    job_queue = application.job_queue
+    job_queue.run_repeating(refresh_session_task, interval=86400, first=86400)
 
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('version', version))
