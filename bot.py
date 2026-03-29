@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.13.0'
+__version__ = '2.14.0'
 
 
 import asyncio
@@ -272,7 +272,6 @@ async def add_bypasses(url: str) -> str:
         (removepaywall, 'Remove Paywall'),
         (printfriendly, 'Print Friendly'),
         (lite_mode, 'Lite Mode'),
-        (google_cache, 'Google Cache'),
         (twitter, 'Twitter Embed'),
         (nitter, 'Twiiit')
     )
@@ -419,18 +418,6 @@ async def lite_mode(url: str, client: requests.Session) -> str | None:
                 return lite_url
         except (requests.ConnectTimeout, requests.ReadTimeout):
             pass
-
-
-@timer
-@snitch
-async def google_cache(url: str, client: requests.Session) -> str | None:
-    gcache_url = f'http://webcache.googleusercontent.com/search?q=cache:{url}'
-    try:
-        r = await client.get_async(gcache_url)
-        if f'<base href="{url}' in r.text:
-            return gcache_url
-    except (requests.ConnectTimeout, requests.ReadTimeout):
-        pass
 
 
 @timer

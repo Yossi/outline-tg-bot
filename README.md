@@ -81,10 +81,10 @@ Run it while passing in the full path to the `data/` directory. (`/home/you/outl
 - [Remove Paywall](https://removepaywall.com)  
 - [Print Friendly](https://printfriendly.com)  
 - Lite Mode. Select sites that also have a lightweight version ([csmonitor](https://csmonitor.com/text_edition), [npr](https://text.npr.org), [cnn](https://lite.cnn.com), [cbc](https://cbc.ca/lite)).
-- Google Search Cache.  
 - Twitter embed links. Loads way faster than the main site.  
 - [Twiiit](https://twiiit.com) For twitter. Chooses a random nitter instance for you.  
 - ~~[Outline](https://outline.com)~~ Dead as of March 2022.  
 - ~~[RemoveJS](https://remove-js.com)~~ Dead as of summer 2024 (claims it will come back someday).  
+- ~~Google Search Cache.~~ Dead as of sometime during 2024.  
 - ~~[12ft Ladder](https://12ft.io)~~ Dead as of July 14, 2025.  
 - ~~[txtify.it](https://txtify.it)~~ Paid service as of January 2026.  
