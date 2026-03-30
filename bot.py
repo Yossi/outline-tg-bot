@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.14.0.lol'
+__version__ = '2.14.1.lol'
 
 
 import asyncio
@@ -259,9 +259,9 @@ async def add_bypasses(url: str) -> str:
         url = f'http://{url}'
 
     try:
-        client_ctx = requests.Session.load("data/session.json", timeout=2)
+        client_ctx = requests.Session.load("data/session.json", timeout=2, ech_config_domain="cloudflare-ech.com")
     except Exception:
-        client_ctx = requests.Session(preset="chrome-latest", timeout=2)
+        client_ctx = requests.Session(preset="chrome-latest", timeout=2, ech_config_domain="cloudflare-ech.com")
 
     text = []
 
@@ -738,17 +738,21 @@ async def post_init(application: Application) -> None:
 
     await application.bot.set_my_short_description(f'Paywall bypass finder bot {__version__}')
 
+    await warmup_session()
+
+    await migrate(application)
+
+
+async def warmup_session() -> None:
+    '''Warm up the session by making requests to popular sites to get TLS tickets'''
     with requests.Session(preset="chrome-latest", timeout=5) as session:
         try:
-            # Shop around for some sweet sweet TLS tickets
             session.get("https://www.google.com/")
             session.get("https://www.cloudflare.com/")
             session.save("data/session.json")
             logging.info("Session warmed and saved to data/session.json")
         except Exception as e:
             logging.warning(f"Could not warm up session: {e}")
-
-    await migrate(application)
 
 
 async def migrate(application: Application) -> None:
@@ -769,13 +773,7 @@ async def migrate(application: Application) -> None:
 async def refresh_session_task(context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Run by job_queue periodically to keep session fresh'''
     logging.info("Refreshing session identity...")
-    with requests.Session(preset="chrome-latest", timeout=5) as session:
-        try:
-            session.get("https://www.google.com/")
-            session.get("https://www.cloudflare.com/")
-            session.save("data/session.json")
-        except Exception as e:
-            logging.error(f"Refresh failed: {e}")
+    await warmup_session()
 
 
 if __name__ == '__main__':
