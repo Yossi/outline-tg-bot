@@ -311,11 +311,8 @@ async def rick_roll(url: str, client: httpcloak.Session) -> str | None:
 async def wayback(url: str, client: httpcloak.Session) -> str | None:
     '''Returns the url of the latest snapshot if available on wayback machine'''
     async def check_archive_org(url: str) -> str | None:
-        try:
-            r = await client.get_async(f'http://archive.org/wayback/available?url={url}')
-            return r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
-        except (httpcloak.ConnectTimeout, httpcloak.ReadTimeout):
-            pass
+        r = await client.get_async(f'http://archive.org/wayback/available?url={url}')
+        return r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
 
     archive_org_url = await check_archive_org(url)
     if not archive_org_url:
@@ -330,12 +327,9 @@ async def archive_is(url: str, client: httpcloak.Session) -> str | None:
     '''Returns the url for this page at archive.is if it exists'''
     # List of TLDs they have: .is .ph .md .li .vn .fo .today
     async def check_archive_is(url: str) -> str | None:
-        try:
-            r = await client.get_async(f'https://archive.is/timemap/{url}')
-            if r.status_code == 200:
-                return f'https://archive.is/newest/{url}'
-        except (httpcloak.ConnectTimeout, httpcloak.ReadTimeout):
-            pass
+        r = await client.get_async(f'https://archive.is/timemap/{url}')
+        if r.status_code == 200:
+            return f'https://archive.is/newest/{url}'
 
     archive_is_url = await check_archive_is(url)
     if not archive_is_url:
@@ -349,35 +343,29 @@ async def archive_is(url: str, client: httpcloak.Session) -> str | None:
 async def ghostarchive(url: str, client: httpcloak.Session) -> str | None:
     '''Returns the url for this page at ghostarchive.org if it exists'''
     ghostarchive_url = f'https://ghostarchive.org/search?term={url}'
-    try:
-        r = await client.get_async(ghostarchive_url)
-        r.raise_for_status()
-        if 'No archives for that site.' in r.text:
-            return
-        start = r.text.find('<a href="/archive/')
-        if start == -1: return
-        end = r.text.find('">', start)
-        path = r.text[start+len('<a href="'):end]
-        if path:
-            return f'https://ghostarchive.org{path}'
-    except (httpcloak.ConnectTimeout, httpcloak.ReadTimeout, httpcloak.HTTPError):
-        pass
+    r = await client.get_async(ghostarchive_url)
+    r.raise_for_status()
+    if 'No archives for that site.' in r.text:
+        return
+    start = r.text.find('<a href="/archive/')
+    if start == -1: return
+    end = r.text.find('">', start)
+    path = r.text[start+len('<a href="'):end]
+    if path:
+        return f'https://ghostarchive.org{path}'
 
 
 @timer
 @snitch
 async def megalodon(url: str, client: httpcloak.Session) -> str | None:
     '''Returns the url of this page if available on megalodon.jp'''
-    try:
-        r = await client.get_async(f'https://megalodon.jp/pc/main?url={url}')
-        r.raise_for_status()
-        start = r.text.find('<a href="https://megalodon.jp/20')
-        if start == -1: return
-        end = r.text.find('" target="_top"', start)
-        megalodon_url = r.text[start+len('<a href="'):end]
-        return megalodon_url
-    except (httpcloak.ConnectTimeout, httpcloak.ReadTimeout, httpcloak.HTTPError):
-        pass
+    r = await client.get_async(f'https://megalodon.jp/pc/main?url={url}')
+    r.raise_for_status()
+    start = r.text.find('<a href="https://megalodon.jp/20')
+    if start == -1: return
+    end = r.text.find('" target="_top"', start)
+    megalodon_url = r.text[start+len('<a href="'):end]
+    return megalodon_url
 
 
 @timer
@@ -385,12 +373,9 @@ async def megalodon(url: str, client: httpcloak.Session) -> str | None:
 async def removepaywall(url: str, client: httpcloak.Session) -> str | None:
     '''Run url through removepaywall.com if original url actually returns anything'''
     removepaywall_url = f'https://www.removepaywall.com/search?url={url}'
-    try:
-        r = await client.get_async(url)
-        r.raise_for_status()
-        return removepaywall_url
-    except (httpcloak.ConnectTimeout, httpcloak.ReadTimeout, httpcloak.HTTPError):
-        pass
+    r = await client.get_async(url)
+    r.raise_for_status()
+    return removepaywall_url
 
 
 @timer
@@ -398,12 +383,9 @@ async def removepaywall(url: str, client: httpcloak.Session) -> str | None:
 async def printfriendly(url: str, client: httpcloak.Session) -> str | None:
     '''Run url through printfriendly.com if original url actually returns anything'''
     printfriendly_url = f'https://www.printfriendly.com/print?url={url}'
-    try:
-        r = await client.get_async(url)
-        r.raise_for_status()
-        return printfriendly_url
-    except (httpcloak.ConnectTimeout, httpcloak.ReadTimeout, httpcloak.HTTPError):
-        pass
+    r = await client.get_async(url)
+    r.raise_for_status()
+    return printfriendly_url
 
 
 @timer
@@ -429,12 +411,9 @@ async def lite_mode(url: str, client: httpcloak.Session) -> str | None:
         lite_url = ''
 
     if lite_url:
-        try:
-            r = await client.get_async(lite_url)
-            if r.status_code == 200:
-                return lite_url
-        except (requests.ConnectTimeout, requests.ReadTimeout):
-            pass
+        r = await client.get_async(lite_url)
+        if r.status_code == 200:
+            return lite_url
 
 
 @timer
