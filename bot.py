@@ -118,7 +118,7 @@ def send_typing_action(func):
     @functools.wraps(func)
     async def wrapped(update, context, *args, **kwargs):
         await context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
-        await func(update, context, *args, **kwargs)
+        return await func(update, context, *args, **kwargs)
     return wrapped
 
 
@@ -251,7 +251,8 @@ def link(url: str, text: str) -> str:
 
 
 @timer
-async def add_bypasses(url: str) -> str:
+@send_typing_action
+async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: str) -> str:
     '''Puts together links with various bypass strategies'''
     if not url:
         return ''
@@ -495,7 +496,7 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         context.chat_data['last url'] = incoming_id, url
 
     active_set = context.chat_data.get('active domains', set())
-    text = await add_bypasses(url) if get_domain(url) in active_set else ''
+    text = await add_bypasses(update, context, url) if get_domain(url) in active_set else ''
 
     if incoming_id in response_record:  # Ie, edited message has already been responded to previously
         response_id = await edit(text, response_record[incoming_id], update, context)  # Will delete the response if the new text is empty
@@ -580,7 +581,7 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         domain = get_domain(url)  # Returns string 'no domain' if none found
         text = include_domain(domain)
         if url:
-            text = await add_bypasses(url)
+            text = await add_bypasses(update, context, url)
 
     elif context.args:  # Directly add domain
         responses = []
@@ -595,7 +596,7 @@ async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         domain = get_domain(url)
         text = include_domain(domain)
         if url:
-            text = await add_bypasses(url)
+            text = await add_bypasses(update, context, url)
 
     response_id = await say(text, update, context)
     if response_id and incoming_text:
