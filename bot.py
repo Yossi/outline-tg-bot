@@ -107,9 +107,9 @@ def snitch(func):
     async def wrapped(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
-        except Exception:
+        except Exception as e:
             trace = "".join(traceback.format_tb(sys.exc_info()[2]))
-            logging.warning(trace)
+            logging.warning(f"{type(e).__name__}: {e}\n{trace}")
     return wrapped
 
 
