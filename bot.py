@@ -90,13 +90,13 @@ def drop_edits(func):
 
 
 def timer(func):
-    '''Decorator to measure how long a function ran. Need to set logging level to debug to see results'''
+    '''Decorator to measure how long a function ran. Need to uncomment the logging line to see results'''
     @functools.wraps(func)
     async def wrapped(*args, **kwargs):
         t1 = time.monotonic() # perf_counter() ?
         result = await func(*args, **kwargs)
         t2 = time.monotonic()
-        logging.debug(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
+        # logging.info(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
         return result
     return wrapped
 
