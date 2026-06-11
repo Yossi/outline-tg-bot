@@ -435,22 +435,6 @@ async def nitter(url: str, client: httpcloak.Session) -> str | None:
         return urlsplit(url)._replace(netloc='twiiit.com').geturl()
 
 
-@timer
-@snitch
-async def twelve_ft(url: str, client: requests.Session) -> str | None:
-    # disabled code but left around in case 13ft.io becomes a thing
-    # https://github.com/wasi-master/13ft
-    twelve_ft_url = f'https://12ft.io/{url}'
-    try:
-        r = await client.get_async(f'https://12ft.io/api/proxy?ref=&q={url}')
-        r.raise_for_status()
-        if '12ft has been disabled for this site' not in r.text and \
-           'detected unusual activity from your computer network' not in r.text:
-            return twelve_ft_url
-    except (httpcloak.ConnectTimeout, httpcloak.ReadTimeout, httpcloak.HTTPError):
-        pass
-
-
 # main thing
 @log
 async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
