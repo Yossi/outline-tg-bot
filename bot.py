@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.14.2'
+__version__ = '2.15.0'
 
 
 import asyncio
@@ -260,9 +260,9 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
         url = f'http://{url}'
 
     try:
-        client_ctx = requests.Session.load("data/session.json", timeout=2, ech_config_domain="cloudflare-ech.com")
+        client_ctx = httpcloak.Session.load("data/session.json", timeout=2, ech_config_domain="cloudflare-ech.com")
     except Exception:
-        client_ctx = requests.Session(preset="chrome-latest", timeout=2, ech_config_domain="cloudflare-ech.com")
+        client_ctx = httpcloak.Session(preset="chrome-latest", timeout=2, ech_config_domain="cloudflare-ech.com")
 
     text = []
 
