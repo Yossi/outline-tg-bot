@@ -478,7 +478,8 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     response_record = context.chat_data.get('response record', {})
     response_text_record = context.chat_data.get('response text record', {})
     incoming_id = update.effective_message.message_id
-    incoming_text = update.effective_message.text
+    preview_url = update.effective_message.link_preview_options.url if update.effective_message.link_preview_options else ' '
+    incoming_text = update.effective_message.text + ' ' + preview_url
 
     old_text = response_text_record.get(incoming_id, '')
     if incoming_text == old_text:
