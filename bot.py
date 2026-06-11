@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.15.0'
+__version__ = '2.15.1'
 
 
 import asyncio
@@ -442,9 +442,15 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     response_record = context.chat_data.get('response record', {})
     response_text_record = context.chat_data.get('response text record', {})
     incoming_id = update.effective_message.message_id
-    preview_url = update.effective_message.link_preview_options.url if update.effective_message.link_preview_options else ' '
-    incoming_text = update.effective_message.text + ' ' + preview_url
 
+    for entity in update.effective_message.entities:
+        if entity.type in ['text_link']:
+            entity_url = entity.url if entity.type == 'text_link' else ' '
+            break
+    else:
+        entity_url = ' '
+
+    incoming_text = update.effective_message.text + ' ' + entity_url
     old_text = response_text_record.get(incoming_id, '')
     if incoming_text == old_text:
         logging.info('GOT YOU! GTFO here with your broken reactions')
