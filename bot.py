@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.15.2'
+__version__ = '2.16.0'
 
 
 import asyncio
@@ -252,14 +252,21 @@ def link(url: str, text: str) -> str:
 
 @timer
 @send_typing_action
-async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: str) -> str:
-    '''Puts together links with various bypass strategies'''
+async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: str, message_id: int | None = None) -> int | None:
+    '''Puts together links with various bypass strategies, posting/editing progressively as they resolve.
+
+    Posts (or edits `message_id`, if given) as soon as the first bypass resolves, then edits in
+    additional bypasses as they complete, throttled to at most one edit per second. If nothing
+    ever resolves and `message_id` was given, that stale message is deleted.
+
+    Returns the id of the message holding the results, or None if nothing was posted/left.
+    '''
     if not url:
-        return ''
+        if message_id:
+            await delete(message_id, update, context)
+        return None
     if not url.startswith('http'):
         url = f'http://{url}'
-
-    text = []
 
     bypass_names = (
         (rick_roll, 'Experimental'),
@@ -273,7 +280,6 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
         (twitter, 'Twitter Embed'),
         (nitter, 'Twiiit')
     )
-
     bypasses, bp_texts = zip(*bypass_names)
 
     def get_session() -> httpcloak.Session:
@@ -282,17 +288,46 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
         except Exception:
             return httpcloak.Session(preset="chrome-latest", timeout=5, ech_config_domain="cloudflare-ech.com")
 
+    MIN_EDIT_INTERVAL = 1  # seconds between edits of the same message, to stay clear of telegram's rate limit
+
+    results = [None] * len(bypasses)
+
+    def render() -> str:
+        return '\n\n'.join(link(results[i], bp_texts[i]) for i in range(len(results)) if results[i])
+
     with get_session() as session:
         session.refresh()
-        tasks = [bypass(url, session) for bypass in bypasses]
-        bp_urls = await asyncio.gather(*tasks)
+        tasks = {asyncio.ensure_future(bypass(url, session)): i for i, bypass in enumerate(bypasses)}
+        pending = set(tasks)
+        last_edit = 0.0
+        shown_anything = False
+
+        while pending:
+            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+            for task in done:
+                results[tasks[task]] = task.result()
+
+            if not any(results):
+                continue  # nothing real to show yet - keep waiting silently
+
+            now = time.monotonic()
+            is_last = not pending
+
+            if not shown_anything or is_last or now - last_edit >= MIN_EDIT_INTERVAL:
+                if message_id is None:
+                    message_id = await say(render(), update, context)
+                else:
+                    message_id = await edit(render(), message_id, update, context)
+                shown_anything = True
+                last_edit = now
+
         session.save("data/session.json")
 
-    for bp_url, bp_text in zip(bp_urls, bp_texts):
-        if bp_url:
-            text.append(link(bp_url, bp_text))
+    if not shown_anything and message_id:
+        await delete(message_id, update, context)
+        return None
 
-    return '\n\n'.join(text)
+    return message_id
 
 
 # bypasses
@@ -469,12 +504,15 @@ async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         context.chat_data['last url'] = incoming_id, url
 
     active_set = context.chat_data.get('active domains', set())
-    text = await add_bypasses(update, context, url) if get_domain(url) in active_set else ''
+    existing_response_id = response_record.get(incoming_id)
 
-    if incoming_id in response_record:  # Ie, edited message has already been responded to previously
-        response_id = await edit(text, response_record[incoming_id], update, context)  # Will delete the response if the new text is empty
+    if get_domain(url) in active_set:
+        response_id = await add_bypasses(update, context, url, message_id=existing_response_id)
+    elif existing_response_id:
+        await delete(existing_response_id, update, context)
+        response_id = None
     else:
-        response_id = await say(text, update, context)
+        response_id = None
 
     if response_id:
         response_record_add(incoming_id, response_id, incoming_text, context)
@@ -536,42 +574,41 @@ async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def include(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Add domains to the set that gets acted on'''
     incoming_text = ''
+    incoming_id = 0
+    response_id = None
 
     def include_domain(domain: str) -> str:
         if domain == 'no domain':
             return 'No domain found to include'
-
         active_set = context.chat_data.get('active domains', set())
         active_set.add(domain)
         context.chat_data['active domains'] = active_set
         return f"Added {domain}"
 
-
     if update.effective_message.reply_to_message:  # Add domain by replying to a message
         incoming_text = update.effective_message.reply_to_message.text
         incoming_id = update.effective_message.reply_to_message.message_id
         url = get_url(incoming_text)
-        domain = get_domain(url)  # Returns string 'no domain' if none found
-        text = include_domain(domain)
+        domain = get_domain(url)
         if url:
-            text = await add_bypasses(update, context, url)
+            include_domain(domain)
+            response_id = await add_bypasses(update, context, url)
+        else:
+            response_id = await say(include_domain(domain), update, context)
 
-    elif context.args:  # Directly add domain
-        responses = []
-        for arg in context.args:
-            domain = get_domain(arg)
-            responses.append(include_domain(domain))
+    elif context.args:
+        responses = [include_domain(get_domain(arg)) for arg in context.args]
+        response_id = await say('\n'.join(responses), update, context)
 
-        text = '\n'.join(responses)
-
-    else:  # Add domain from last url
+    else:
         incoming_id, url = context.chat_data.get('last url', (0, ''))
         domain = get_domain(url)
-        text = include_domain(domain)
         if url:
-            text = await add_bypasses(update, context, url)
+            include_domain(domain)
+            response_id = await add_bypasses(update, context, url)
+        else:
+            response_id = await say(include_domain(domain), update, context)
 
-    response_id = await say(text, update, context)
     if response_id and incoming_text:
         response_record_add(incoming_id, response_id, incoming_text, context)
 
