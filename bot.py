@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.15.1'
+__version__ = '2.15.2'
 
 
 import asyncio
@@ -259,11 +259,6 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
     if not url.startswith('http'):
         url = f'http://{url}'
 
-    try:
-        client_ctx = httpcloak.Session.load("data/session.json", timeout=2, ech_config_domain="cloudflare-ech.com")
-    except Exception:
-        client_ctx = httpcloak.Session(preset="chrome-latest", timeout=2, ech_config_domain="cloudflare-ech.com")
-
     text = []
 
     bypass_names = (
@@ -280,9 +275,18 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
     )
 
     bypasses, bp_texts = zip(*bypass_names)
-    with client_ctx as client:
-        tasks = [bypass(url, client) for bypass in bypasses]
+
+    def get_session() -> httpcloak.Session:
+        try:
+            return httpcloak.Session.load("data/session.json", timeout=5, ech_config_domain="cloudflare-ech.com")
+        except Exception:
+            return httpcloak.Session(preset="chrome-latest", timeout=5, ech_config_domain="cloudflare-ech.com")
+
+    with get_session() as session:
+        session.refresh()
+        tasks = [bypass(url, session) for bypass in bypasses]
         bp_urls = await asyncio.gather(*tasks)
+        session.save("data/session.json")
 
     for bp_url, bp_text in zip(bp_urls, bp_texts):
         if bp_url:
@@ -294,7 +298,7 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
 # bypasses
 @timer
 @snitch
-async def rick_roll(url: str, client: httpcloak.Session) -> str | None:
+async def rick_roll(url: str, session: httpcloak.Session) -> str | None:
     '''Rickrolls people on April 1st'''
     def is_april_fools():
         utc_now = datetime.now(timezone.utc)
@@ -308,10 +312,10 @@ async def rick_roll(url: str, client: httpcloak.Session) -> str | None:
 
 @timer
 @snitch
-async def wayback(url: str, client: httpcloak.Session) -> str | None:
+async def wayback(url: str, session: httpcloak.Session) -> str | None:
     '''Returns the url of the latest snapshot if available on wayback machine'''
     async def check_archive_org(url: str) -> str | None:
-        r = await client.get_async(f'http://archive.org/wayback/available?url={url}')
+        r = await session.get_async(f'http://archive.org/wayback/available?url={url}')
         return r.json().get('archived_snapshots', {}).get('closest', {}).get('url')
 
     archive_org_url = await check_archive_org(url)
@@ -323,11 +327,11 @@ async def wayback(url: str, client: httpcloak.Session) -> str | None:
 
 @timer
 @snitch
-async def archive_is(url: str, client: httpcloak.Session) -> str | None:
+async def archive_is(url: str, session: httpcloak.Session) -> str | None:
     '''Returns the url for this page at archive.is if it exists'''
     # List of TLDs they have: .is .ph .md .li .vn .fo .today
     async def check_archive_is(url: str) -> str | None:
-        r = await client.get_async(f'https://archive.is/timemap/{url}')
+        r = await session.get_async(f'https://archive.is/timemap/{url}')
         if r.status_code == 200:
             return f'https://archive.is/newest/{url}'
 
@@ -340,10 +344,10 @@ async def archive_is(url: str, client: httpcloak.Session) -> str | None:
 
 @timer
 @snitch
-async def ghostarchive(url: str, client: httpcloak.Session) -> str | None:
+async def ghostarchive(url: str, session: httpcloak.Session) -> str | None:
     '''Returns the url for this page at ghostarchive.org if it exists'''
     ghostarchive_url = f'https://ghostarchive.org/search?term={url}'
-    r = await client.get_async(ghostarchive_url)
+    r = await session.get_async(ghostarchive_url)
     r.raise_for_status()
     if 'No archives for that site.' in r.text:
         return
@@ -357,9 +361,9 @@ async def ghostarchive(url: str, client: httpcloak.Session) -> str | None:
 
 @timer
 @snitch
-async def megalodon(url: str, client: httpcloak.Session) -> str | None:
+async def megalodon(url: str, session: httpcloak.Session) -> str | None:
     '''Returns the url of this page if available on megalodon.jp'''
-    r = await client.get_async(f'https://megalodon.jp/pc/main?url={url}')
+    r = await session.get_async(f'https://megalodon.jp/pc/main?url={url}')
     r.raise_for_status()
     start = r.text.find('<a href="https://megalodon.jp/20')
     if start == -1: return
@@ -370,27 +374,27 @@ async def megalodon(url: str, client: httpcloak.Session) -> str | None:
 
 @timer
 @snitch
-async def removepaywall(url: str, client: httpcloak.Session) -> str | None:
+async def removepaywall(url: str, session: httpcloak.Session) -> str | None:
     '''Run url through removepaywall.com if original url actually returns anything'''
     removepaywall_url = f'https://www.removepaywall.com/search?url={url}'
-    r = await client.get_async(url)
+    r = await session.get_async(url)
     r.raise_for_status()
     return removepaywall_url
 
 
 @timer
 @snitch
-async def printfriendly(url: str, client: httpcloak.Session) -> str | None:
+async def printfriendly(url: str, session: httpcloak.Session) -> str | None:
     '''Run url through printfriendly.com if original url actually returns anything'''
     printfriendly_url = f'https://www.printfriendly.com/print?url={url}'
-    r = await client.get_async(url)
+    r = await session.get_async(url)
     r.raise_for_status()
     return printfriendly_url
 
 
 @timer
 @snitch
-async def lite_mode(url: str, client: httpcloak.Session) -> str | None:
+async def lite_mode(url: str, session: httpcloak.Session) -> str | None:
     '''Converts certain news sites to their lite versions'''
     domain = get_domain(url)
     url_parts = urlsplit(url)
@@ -411,14 +415,14 @@ async def lite_mode(url: str, client: httpcloak.Session) -> str | None:
         lite_url = ''
 
     if lite_url:
-        r = await client.get_async(lite_url)
+        r = await session.get_async(lite_url)
         if r.status_code == 200:
             return lite_url
 
 
 @timer
 @snitch
-async def twitter(url: str, client: httpcloak.Session) -> str | None:
+async def twitter(url: str, session: httpcloak.Session) -> str | None:
     '''Converts twitter links to twitter embed links that load faster and allow logged out viewing'''
     if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
         url_parts = urlsplit(url)
@@ -429,7 +433,7 @@ async def twitter(url: str, client: httpcloak.Session) -> str | None:
 
 @timer
 @snitch
-async def nitter(url: str, client: httpcloak.Session) -> str | None:
+async def nitter(url: str, session: httpcloak.Session) -> str | None:
     '''Converts twitter links to a randomly chosen instance of nitter'''
     if get_domain(url) in ('twitter.com', 'fxtwitter.com', 'x.com'):
         return urlsplit(url)._replace(netloc='twiiit.com').geturl()
