@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.16.0'
+__version__ = '2.16.1'
 
 
 import asyncio
@@ -412,7 +412,7 @@ async def megalodon(url: str, session: httpcloak.Session) -> str | None:
 async def removepaywall(url: str, session: httpcloak.Session) -> str | None:
     '''Run url through removepaywall.com if original url actually returns anything'''
     removepaywall_url = f'https://www.removepaywall.com/search?url={url}'
-    r = await session.get_async(url)
+    r = await session.get_async(removepaywall_url)
     r.raise_for_status()
     return removepaywall_url
 
@@ -422,7 +422,7 @@ async def removepaywall(url: str, session: httpcloak.Session) -> str | None:
 async def printfriendly(url: str, session: httpcloak.Session) -> str | None:
     '''Run url through printfriendly.com if original url actually returns anything'''
     printfriendly_url = f'https://www.printfriendly.com/print?url={url}'
-    r = await session.get_async(url)
+    r = await session.get_async(printfriendly_url)
     r.raise_for_status()
     return printfriendly_url
 
