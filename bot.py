@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.16.2'
+__version__ = '2.16.3'
 
 
 import asyncio
@@ -54,7 +54,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
     text = update.effective_message.text if update.effective_message else None
 
-    message = f"Hey.\n The error <code>{sys.exc_info()[0].__name__}: {html.escape(str(context.error))}</code> happened{user_info} said <code>{text}</code>.\n\n<pre><code class='language-python'>{html.escape(trace)}</code></pre>"
+    message = f"Hey.\n The error <code>{type(context.error).__name__}: {html.escape(str(context.error))}</code> happened{user_info} said <code>{text}</code>.\n\n<pre><code class='language-python'>{html.escape(trace)}</code></pre>"
 
     for admin_id in LIST_OF_ADMINS:
         await context.bot.send_message(chat_id=admin_id, text=message, parse_mode=ParseMode.HTML)
@@ -65,9 +65,11 @@ def log(func):
     '''Decorator to log who said what to the bot'''
     @functools.wraps(func)
     async def wrapped(update, context, *args, **kwargs):
-        user_id = update.effective_user.id
-        name = update.effective_user.username
-        logging.info(f'{name} ({user_id}) said:\n{update.effective_message.text}')
+        message = update.effective_message
+        sender = update.effective_user or (message.sender_chat if message else None)  # effective_user is None for channel posts
+        name = getattr(sender, 'username', None)
+        sender_id = getattr(sender, 'id', None)
+        logging.info(f'{name} ({sender_id}) said:\n{message.text if message else None}')
         logging.info(f'Function {func.__name__}() called')
 
         # # Detailed debug info
@@ -108,7 +110,7 @@ def snitch(func):
         try:
             return await func(*args, **kwargs)
         except Exception as e:
-            trace = "".join(traceback.format_tb(sys.exc_info()[2]))
+            trace = "".join(traceback.format_tb(e.__traceback__))
             logging.warning(f"{type(e).__name__}: {e}\n{trace}")
     return wrapped
 
@@ -334,7 +336,7 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
 @timer
 @snitch
 async def rick_roll(url: str, session: httpcloak.Session) -> str | None:
-    '''Rickrolls people on April 1st'''
+    '''Rickrolls for April 1st'''
     def is_april_fools():
         utc_now = datetime.now(timezone.utc)
         start_time_utc = datetime(utc_now.year, 4, 1, 0, 0, tzinfo=timezone.utc) + timedelta(hours=-4) # EDT
@@ -676,8 +678,8 @@ async def delete_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     me = await application.bot.get_me()
     bot_user_id = me.id
 
-    reply_to_user_id = update.effective_message.reply_to_message.from_user.id
-    if bot_user_id == reply_to_user_id:
+    reply_to_user = update.effective_message.reply_to_message.from_user
+    if reply_to_user and bot_user_id == reply_to_user.id:
         target_id = update.effective_message.reply_to_message.message_id
         reply_id = update.effective_message.message_id
         try:
@@ -703,12 +705,12 @@ async def export_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 async def import_urls(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Import settings previously exported with /export'''
     chat_id = update.effective_message.chat_id
-    file_name = update.message.effective_attachment.file_name
-    mime_type = update.message.effective_attachment.mime_type
+    file_name = update.effective_message.effective_attachment.file_name
+    mime_type = update.effective_message.effective_attachment.mime_type
     if (file_name, mime_type) != (f'{chat_id}_urls_backup.txt', 'text/plain'):
         return
 
-    file = await update.message.effective_attachment.get_file()
+    file = await update.effective_message.effective_attachment.get_file()
     bio = BytesIO()
     await file.download_to_memory(bio)
     bio.seek(0)
@@ -810,7 +812,7 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('data', chat_data, filters=filters.User(user_id=LIST_OF_ADMINS)))
     application.add_handler(CommandHandler('library_versions', library_versions, filters=filters.User(user_id=LIST_OF_ADMINS)))
 
-    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), incoming))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & ~filters.UpdateType.CHANNEL_POSTS, incoming))
     application.add_handler(MessageHandler(filters.Document.TEXT, import_urls)) # filters.Caption(['/import']) &
 
     application.add_error_handler(error_handler)
