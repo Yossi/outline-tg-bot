@@ -478,6 +478,10 @@ async def nitter(url: str, session: httpcloak.Session) -> str | None:
 @log
 async def incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     '''Check incoming message stream for urls and put attempted bypasses on them if they are in the list of domains that need it'''
+    user = update.effective_user
+    if user and user.is_bot:
+        return  # Ignore other bots
+
     response_record = context.chat_data.get('response record', {})
     response_text_record = context.chat_data.get('response text record', {})
     incoming_id = update.effective_message.message_id
