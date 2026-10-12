@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.17.0'
+__version__ = '2.17.1'
 
 
 import asyncio
@@ -416,7 +416,8 @@ async def removepaywall(url: str, session: httpcloak.Session) -> str | None:
     '''Run url through removepaywall.com if original url actually returns anything'''
     removepaywall_url = f'https://www.removepaywall.com/search?url={url}'
     r = await session.get_async(url)
-    r.raise_for_status()
+    if r.status_code > 400 and r.status_code != 402:
+        r.raise_for_status()
     return removepaywall_url
 
 
@@ -426,7 +427,8 @@ async def printfriendly(url: str, session: httpcloak.Session) -> str | None:
     '''Run url through printfriendly.com if original url actually returns anything'''
     printfriendly_url = f'https://www.printfriendly.com/print?url={url}'
     r = await session.get_async(url)
-    r.raise_for_status()
+    if r.status_code > 400 and r.status_code != 402:
+        r.raise_for_status()
     return printfriendly_url
 
 
