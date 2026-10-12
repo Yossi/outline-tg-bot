@@ -1,7 +1,7 @@
 '''Telegram bot that (primarily) attempts to perform url hacks to get around paywalls'''
 
 
-__version__ = '2.16.3'
+__version__ = '2.17.0'
 
 
 import asyncio
@@ -278,6 +278,7 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
         (megalodon, 'megalodon.jp'),
         (removepaywall, 'Remove Paywall'),
         (printfriendly, 'Print Friendly'),
+        (wallhopio, 'wallhop.io'),
         (lite_mode, 'Lite Mode'),
         (twitter, 'Twitter Embed'),
         (nitter, 'Twiiit')
@@ -427,6 +428,16 @@ async def printfriendly(url: str, session: httpcloak.Session) -> str | None:
     r = await session.get_async(url)
     r.raise_for_status()
     return printfriendly_url
+
+
+@timer
+@snitch
+async def wallhopio(url: str, session: httpcloak.Session) -> str | None:
+    '''Returns the url for this page at wallhop.io if it exists'''
+    wallhopio_url = f'https://wallhop.io/{url}'
+    r = await session.get_async(wallhopio_url)
+    r.raise_for_status()
+    return wallhopio_url
 
 
 @timer
