@@ -287,9 +287,9 @@ async def add_bypasses(update: Update, context: ContextTypes.DEFAULT_TYPE, url: 
 
     def get_session() -> httpcloak.Session:
         try:
-            return httpcloak.Session.load("data/session.json", timeout=5) #, ech_config_domain="cloudflare-ech.com")
+            return httpcloak.Session.load("data/session.json", timeout=7) #, ech_config_domain="cloudflare-ech.com")
         except Exception:
-            return httpcloak.Session(preset="chrome-latest", timeout=5) #, ech_config_domain="cloudflare-ech.com")
+            return httpcloak.Session(preset="chrome-latest", timeout=7) #, ech_config_domain="cloudflare-ech.com")
 
     MIN_EDIT_INTERVAL = 1  # seconds between edits of the same message, to stay clear of telegram's rate limit
 
